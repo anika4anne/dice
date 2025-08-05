@@ -16,9 +16,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Game modes */}
         <div className="grid w-full max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
-          {/* Single Player Card */}
           <Link
             href="/single-player"
             className="group relative overflow-hidden rounded-2xl bg-white/10 p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-white/20"
@@ -44,8 +42,8 @@ export default function HomePage() {
                 Single Player
               </h3>
               <p className="mb-4 text-gray-300">
-                Challenge yourself against an AI opponent. Perfect for quick
-                games and practice!
+                Challenge yourself against a robot. Perfect for quick games and
+                practice!
               </p>
               <div className="flex items-center text-purple-300 transition-transform duration-300 group-hover:translate-x-2">
                 <span className="font-semibold">Start Game</span>
@@ -66,7 +64,6 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Multiplayer Card */}
           <Link
             href="#"
             className="group relative overflow-hidden rounded-2xl bg-white/10 p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-white/20"

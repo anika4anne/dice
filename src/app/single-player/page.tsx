@@ -4,13 +4,33 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function SinglePlayerPage() {
-  const [dice, setDice] = useState([1, 1, 1, 1, 1]);
-  const [score, setScore] = useState(0);
+  const [playerDice, setPlayerDice] = useState([1, 1, 1, 1, 1]);
+  const [robotDice, setRobotDice] = useState([1, 1, 1, 1, 1]);
+  const [playerScore, setPlayerScore] = useState(0);
+  const [robotScore, setRobotScore] = useState(0);
+  const [winner, setWinner] = useState("");
 
   const rollDice = () => {
-    const newDice = dice.map(() => Math.floor(Math.random() * 6) + 1);
-    setDice(newDice);
-    setScore(newDice.reduce((sum, value) => sum + value, 0));
+    const newPlayerDice = playerDice.map(
+      () => Math.floor(Math.random() * 6) + 1,
+    );
+    const newRobotDice = robotDice.map(() => Math.floor(Math.random() * 6) + 1);
+
+    const playerTotal = newPlayerDice.reduce((sum, value) => sum + value, 0);
+    const robotTotal = newRobotDice.reduce((sum, value) => sum + value, 0);
+
+    setPlayerDice(newPlayerDice);
+    setRobotDice(newRobotDice);
+    setPlayerScore(playerTotal);
+    setRobotScore(robotTotal);
+
+    if (playerTotal > robotTotal) {
+      setWinner("You win!");
+    } else if (robotTotal > playerTotal) {
+      setWinner("Robot wins!");
+    } else {
+      setWinner("It's a tie!");
+    }
   };
 
   return (
@@ -22,20 +42,43 @@ export default function SinglePlayerPage() {
 
         <h1 className="mb-8 text-4xl font-bold text-white">Dice Game</h1>
 
-        <div className="mb-8 text-center">
-          <p className="text-2xl text-white">Score: {score}</p>
+        <div className="mb-8 grid grid-cols-2 gap-16">
+          <div className="text-center">
+            <h2 className="mb-4 text-2xl font-bold text-blue-400">You</h2>
+            <p className="mb-4 text-xl text-white">Score: {playerScore}</p>
+            <div className="grid grid-cols-5 gap-2">
+              {playerDice.map((value, index) => (
+                <div
+                  key={index}
+                  className="h-12 w-12 rounded-lg bg-white text-center text-lg leading-[3rem] font-bold text-gray-800"
+                >
+                  {value}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h2 className="mb-4 text-2xl font-bold text-red-400">Robot</h2>
+            <p className="mb-4 text-xl text-white">Score: {robotScore}</p>
+            <div className="grid grid-cols-5 gap-2">
+              {robotDice.map((value, index) => (
+                <div
+                  key={index}
+                  className="h-12 w-12 rounded-lg bg-white text-center text-lg leading-[3rem] font-bold text-gray-800"
+                >
+                  {value}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-5 gap-4">
-          {dice.map((value, index) => (
-            <div
-              key={index}
-              className="h-16 w-16 rounded-lg bg-white text-center text-2xl leading-[4rem] font-bold text-gray-800"
-            >
-              {value}
-            </div>
-          ))}
-        </div>
+        {winner && (
+          <div className="mb-8 text-center">
+            <p className="text-2xl font-bold text-yellow-300">{winner}</p>
+          </div>
+        )}
 
         <button
           onClick={rollDice}
