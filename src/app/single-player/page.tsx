@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import confetti from "canvas-confetti";
 
 export default function SinglePlayerPage() {
   const [playerName, setPlayerName] = useState("");
@@ -18,6 +19,10 @@ export default function SinglePlayerPage() {
   const [isRolling, setIsRolling] = useState(false);
   const [gameMode, setGameMode] = useState("classic");
   const [diceType, setDiceType] = useState("6-sided");
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [finalResults, setFinalResults] = useState<
+    Array<{ name: string; wins: number; score: number; isWinner: boolean }>
+  >([]);
   const [stats, setStats] = useState({
     totalGames: 0,
     playerWins: 0,
@@ -44,6 +49,14 @@ export default function SinglePlayerPage() {
       }, 1000);
     }
   }, [isRolling]);
+
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
+  };
 
   const getDiceMax = () => {
     switch (diceType) {
@@ -126,6 +139,32 @@ export default function SinglePlayerPage() {
 
       setWinner(`${roundWinner} ${gameWinner}`);
 
+      const playerFinalScore =
+        finalPlayerWins > finalRobotWins ? playerTotal : playerTotal;
+      const robotFinalScore =
+        finalRobotWins > finalPlayerWins ? robotTotal : robotTotal;
+
+      const results = [
+        {
+          name:
+            finalPlayerWins > finalRobotWins ? playerName || "You" : "Robot",
+          wins: Math.max(finalPlayerWins, finalRobotWins),
+          score: Math.max(playerFinalScore, robotFinalScore),
+          isWinner: true,
+        },
+        {
+          name:
+            finalPlayerWins > finalRobotWins ? "Robot" : playerName || "You",
+          wins: Math.min(finalPlayerWins, finalRobotWins),
+          score: Math.min(playerFinalScore, robotFinalScore),
+          isWinner: false,
+        },
+      ];
+
+      setFinalResults(results);
+      setShowLeaderboard(true);
+      triggerConfetti();
+
       setStats((prev) => ({
         totalGames: prev.totalGames + 1,
         playerWins:
@@ -152,6 +191,7 @@ export default function SinglePlayerPage() {
     setWinner("");
     setPlayerScore(0);
     setRobotScore(0);
+    setShowLeaderboard(false);
   };
 
   const rollDice = () => {
@@ -166,6 +206,7 @@ export default function SinglePlayerPage() {
     setWinner("");
     setPlayerScore(0);
     setRobotScore(0);
+    setShowLeaderboard(false);
   };
 
   const getScoreDescription = (score: number) => {
@@ -347,6 +388,68 @@ export default function SinglePlayerPage() {
               </button>
             )}
           </>
+        )}
+
+        {showLeaderboard && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-teal-900 to-emerald-700 p-8 shadow-2xl">
+              <h2 className="mb-6 text-center text-3xl font-bold text-white">
+                🏆 Game Results 🏆
+              </h2>
+
+              <div className="mb-6 space-y-4">
+                {finalResults.map((player, index) => (
+                  <div
+                    key={player.name}
+                    className={`flex items-center justify-between rounded-lg p-4 ${
+                      player.isWinner
+                        ? "border-2 border-yellow-400 bg-gradient-to-r from-yellow-400/20 to-orange-400/20"
+                        : "bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`text-2xl ${player.isWinner ? "text-yellow-400" : "text-gray-400"}`}
+                      >
+                        {index === 0 ? "🥇" : "🥈"}
+                      </div>
+                      <div>
+                        <div
+                          className={`font-bold ${player.isWinner ? "text-yellow-300" : "text-white"}`}
+                        >
+                          {player.name}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {player.wins} wins
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-white">
+                        {player.score}
+                      </div>
+                      <div className="text-xs text-gray-400">Final Score</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={resetGame}
+                  className="flex-1 rounded-lg bg-blue-600 px-4 py-3 text-white transition-colors hover:bg-blue-700"
+                >
+                  Play Again
+                </button>
+                <Link
+                  href="/"
+                  className="flex-1 rounded-lg bg-gray-600 px-4 py-3 text-center text-white transition-colors hover:bg-gray-700"
+                >
+                  Main Menu
+                </Link>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </main>
