@@ -4,10 +4,15 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Dice Game - Roll the Dice and Test Your Luck!",
+  title: "Dice Game",
   description:
     "An exciting dice game where you can challenge yourself against AI or play with friends. Roll the dice and see who gets the highest score!",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [
+    {
+      rel: "icon",
+      url: "/logo.svg",
+    },
+  ],
 };
 
 const geist = Geist({

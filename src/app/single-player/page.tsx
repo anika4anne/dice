@@ -233,7 +233,7 @@ export default function SinglePlayerPage() {
           ← Back to Home
         </Link>
 
-        <h1 className="mb-8 text-4xl font-bold text-white">Dice Game</h1>
+        <h1 className="mb-8 text-4xl font-bold text-white">🎲 Dice Game</h1>
 
         {!gameStarted ? (
           <div className="mb-8 text-center">
@@ -430,6 +430,7 @@ export default function SinglePlayerPage() {
                       </div>
                       <div className="text-xs text-gray-400">Final Score</div>
                     </div>
+                    ``
                   </div>
                 ))}
               </div>
