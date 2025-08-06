@@ -64,7 +64,7 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="#"
+            href="/multiplayer"
             className="group relative overflow-hidden rounded-2xl bg-white/10 p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-white/20"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-indigo-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
@@ -83,7 +83,7 @@ export default function HomePage() {
                 game nights!
               </p>
               <div className="flex items-center text-pink-300 transition-transform duration-300 group-hover:translate-x-2">
-                <span className="font-semibold">Coming Soon</span>
+                <span className="font-semibold">Let's Play!</span>
                 <svg
                   className="ml-2 h-5 w-5"
                   fill="none"
@@ -94,7 +94,7 @@ export default function HomePage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
                   />
                 </svg>
               </div>
