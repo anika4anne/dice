@@ -4,7 +4,15 @@ import { faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-pink-900">
+    <main
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/bg.avif')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-16">
         {/* Header */}
         <div className="mb-16 text-center">

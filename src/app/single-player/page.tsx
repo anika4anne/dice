@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function SinglePlayerPage() {
+  const [playerName, setPlayerName] = useState("");
   const [playerDice, setPlayerDice] = useState([1, 1, 1, 1, 1]);
   const [robotDice, setRobotDice] = useState([1, 1, 1, 1, 1]);
   const [playerScore, setPlayerScore] = useState(0);
@@ -92,7 +93,7 @@ export default function SinglePlayerPage() {
 
     let roundWinner = "";
     if (playerTotal > robotTotal) {
-      roundWinner = "You win this round!";
+      roundWinner = `${playerName || "You"} win this round!`;
       setPlayerWins((prev) => prev + 1);
     } else if (robotTotal > playerTotal) {
       roundWinner = "Robot wins this round!";
@@ -120,7 +121,7 @@ export default function SinglePlayerPage() {
 
       const gameWinner =
         finalPlayerWins > finalRobotWins
-          ? "You win the game!"
+          ? `${playerName || "You"} win the game!`
           : "Robot wins the game!";
 
       setWinner(`${roundWinner} ${gameWinner}`);
@@ -140,6 +141,10 @@ export default function SinglePlayerPage() {
   };
 
   const startGame = () => {
+    if (!playerName.trim()) {
+      alert("Please enter your name to start the game!");
+      return;
+    }
     setGameStarted(true);
     setCurrentRound(0);
     setPlayerWins(0);
@@ -173,7 +178,15 @@ export default function SinglePlayerPage() {
   };
 
   return (
-    <main className="min-h-screen bg-pink-900">
+    <main
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/bg.avif')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <Link href="/" className="mb-8 text-blue-300 hover:text-blue-200">
           ← Back to Home
@@ -186,6 +199,17 @@ export default function SinglePlayerPage() {
             <h2 className="mb-4 text-2xl font-bold text-white">Settings</h2>
 
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-white">Your Name:</label>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white placeholder-gray-400"
+                />
+              </div>
+
               <div>
                 <label className="mb-2 block text-white">
                   Number of Rounds:
@@ -258,7 +282,7 @@ export default function SinglePlayerPage() {
                 Round {currentRound + 1} of {totalRounds}
               </p>
               <p className="text-white">
-                Wins: You {playerWins} - Robot {robotWins}
+                Wins: {playerName || "You"} {playerWins} - Robot {robotWins}
               </p>
               <p className="text-sm text-gray-300">
                 Mode: {gameMode} | Dice: {diceType}
@@ -267,7 +291,9 @@ export default function SinglePlayerPage() {
 
             <div className="mb-8 grid grid-cols-2 gap-16">
               <div className="text-center">
-                <h2 className="mb-4 text-2xl font-bold text-blue-400">You</h2>
+                <h2 className="mb-4 text-2xl font-bold text-blue-400">
+                  {playerName || "You"}
+                </h2>
                 <p className="mb-4 text-xl text-white">
                   {getScoreDescription(playerScore)}
                 </p>
@@ -311,23 +337,15 @@ export default function SinglePlayerPage() {
               </div>
             )}
 
-            <div className="flex gap-4">
-              {currentRound < totalRounds && !isRolling && (
-                <button
-                  onClick={rollDice}
-                  className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:opacity-50"
-                  disabled={isRolling}
-                >
-                  {isRolling ? "Rolling..." : "Roll Dice"}
-                </button>
-              )}
+            {currentRound < totalRounds && !isRolling && (
               <button
-                onClick={resetGame}
-                className="rounded-lg bg-gray-600 px-8 py-3 text-white hover:bg-gray-700"
+                onClick={rollDice}
+                className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:opacity-50"
+                disabled={isRolling}
               >
-                New Game
+                {isRolling ? "Rolling..." : "Roll Dice"}
               </button>
-            </div>
+            )}
           </>
         )}
       </div>
