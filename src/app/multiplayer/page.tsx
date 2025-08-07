@@ -201,7 +201,7 @@ export default function MultiplayerPage() {
     }));
     setFinalResults(results);
     setShowLeaderboard(true);
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    void confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
   };
 
   const resetGame = () => {
@@ -440,8 +440,8 @@ export default function MultiplayerPage() {
                   Round Results:
                 </h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  {roundResults.map((result, index) => (
-                    <div key={index} className="flex justify-between">
+                  {roundResults.map((result, _index) => (
+                    <div key={_index} className="flex justify-between">
                       <span className="text-gray-300">{result.name}:</span>
                       <span className="font-bold text-white">
                         {result.score}

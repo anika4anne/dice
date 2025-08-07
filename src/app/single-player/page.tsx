@@ -51,7 +51,7 @@ export default function SinglePlayerPage() {
   }, [isRolling]);
 
   const triggerConfetti = () => {
-    confetti({
+    void confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },

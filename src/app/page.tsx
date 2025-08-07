@@ -45,7 +45,7 @@ export default function HomePage() {
                 Wanna play against a robot? Perfect for practicing! ^_^
               </p>
               <div className="flex items-center text-purple-300 transition-transform duration-300 group-hover:translate-x-2">
-                <span className="font-semibold">Let's Play!</span>
+                <span className="font-semibold">Let&apos;s Play!</span>
                 <svg
                   className="ml-2 h-5 w-5"
                   fill="none"
@@ -83,7 +83,7 @@ export default function HomePage() {
                 game nights!
               </p>
               <div className="flex items-center text-pink-300 transition-transform duration-300 group-hover:translate-x-2">
-                <span className="font-semibold">Let's Play!</span>
+                <span className="font-semibold">Let&apos;s Play!</span>
                 <svg
                   className="ml-2 h-5 w-5"
                   fill="none"
