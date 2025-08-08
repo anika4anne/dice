@@ -1,14 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faCrown } from "@fortawesome/free-solid-svg-icons";
 
 interface Player {
   id: number;
   name: string;
   isHost: boolean;
+  score: number;
+  dice: number[];
+  isCurrentTurn: boolean;
+  rollsLeft: number;
 }
+
+interface RoomData {
+  players: Player[];
+  totalRounds: number;
+  gameMode: string;
+  diceType: string;
+  gameStarted: boolean;
+  currentRound: number;
+  currentPlayerIndex: number;
+  roundScores: Record<number, number>[];
+}
+
+const getRooms = (): Map<string, RoomData> => {
+  if (typeof window === "undefined") return new Map();
+
+  const stored = localStorage.getItem("dice-game-rooms");
+  if (stored) {
+    const parsed = JSON.parse(stored) as Record<string, RoomData>;
+    return new Map(Object.entries(parsed));
+  }
+  return new Map();
+};
+
+const saveRooms = (rooms: Map<string, RoomData>) => {
+  if (typeof window === "undefined") return;
+
+  const obj = Object.fromEntries(rooms);
+  localStorage.setItem("dice-game-rooms", JSON.stringify(obj));
+};
 
 export default function CreateRoomPage() {
   const [roomCode, setRoomCode] = useState("");
@@ -17,65 +52,43 @@ export default function CreateRoomPage() {
   const [gameMode, setGameMode] = useState("classic");
   const [diceType, setDiceType] = useState("6-sided");
   const [players, setPlayers] = useState<Player[]>([
-    { id: 1, name: "Host", isHost: true },
+    {
+      id: 1,
+      name: "Host",
+      isHost: true,
+      score: 0,
+      dice: [1, 1, 1, 1, 1],
+      isCurrentTurn: false,
+      rollsLeft: 3,
+    },
   ]);
   const [hostName, setHostName] = useState("");
   const [showRoomInfo, setShowRoomInfo] = useState(false);
+  const [copyStatus, setCopyStatus] = useState("Copy");
+  const [currentRound, setCurrentRound] = useState(1);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [roundScores, setRoundScores] = useState<Record<number, number>[]>([]);
 
-  const generateRoomCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+  useEffect(() => {
+    if (roomCode && showRoomInfo) {
+      const interval = setInterval(() => {
+        const rooms = getRooms();
+        const room = rooms.get(roomCode);
+        if (room) {
+          setPlayers(room.players);
+          setTotalRounds(room.totalRounds);
+          setGameMode(room.gameMode);
+          setDiceType(room.diceType);
+          setGameStarted(room.gameStarted);
+          setCurrentRound(room.currentRound || 1);
+          setCurrentPlayerIndex(room.currentPlayerIndex || 0);
+          setRoundScores(room.roundScores || []);
+        }
+      }, 2000);
+
+      return () => clearInterval(interval);
     }
-    setRoomCode(code);
-    setShowRoomInfo(true);
-  };
-
-  const addPlayer = () => {
-    if (players.length < 6) {
-      setPlayers([
-        ...players,
-        {
-          id: Date.now(),
-          name: `Player ${players.length + 1}`,
-          isHost: false,
-        },
-      ]);
-    }
-  };
-
-  const removePlayer = (id: number) => {
-    if (id !== 1) {
-      setPlayers(players.filter((player) => player.id !== id));
-    }
-  };
-
-  const updatePlayerName = (id: number, name: string) => {
-    setPlayers(
-      players.map((player) =>
-        player.id === id ? { ...player, name } : player,
-      ),
-    );
-  };
-
-  const startGame = () => {
-    if (!hostName.trim()) {
-      alert("Please enter your name to start the game!");
-      return;
-    }
-    if (players.length < 2) {
-      alert("You need at least 2 players to start the game!");
-      return;
-    }
-    setGameStarted(true);
-    void confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
-  };
-
-  const copyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode);
-    alert("Room code copied to clipboard!");
-  };
+  }, [roomCode, showRoomInfo, players.length]);
 
   const getDiceMax = () => {
     const maxMap = {
@@ -89,16 +102,249 @@ export default function CreateRoomPage() {
     return maxMap[diceType as keyof typeof maxMap] || 6;
   };
 
-  const getScoreDescription = (score: number) => {
-    const descriptions = {
-      sum: "Sum",
-      multiply: "Product",
-      highest: "Highest",
-      lowest: "Lowest",
-      pairs: "Pairs",
-    };
-    return `${descriptions[gameMode as keyof typeof descriptions] || "Score"}: ${score}`;
+  const rollDice = () => {
+    const currentPlayer = players[currentPlayerIndex];
+    if (!currentPlayer || currentPlayer.rollsLeft <= 0) return;
+
+    const max = getDiceMax();
+    const newDice = currentPlayer.dice?.map(
+      () => Math.floor(Math.random() * max) + 1,
+    ) || [1, 1, 1, 1, 1];
+
+    const updatedPlayers = players.map((player, index) =>
+      index === currentPlayerIndex
+        ? { ...player, dice: newDice, rollsLeft: player.rollsLeft - 1 }
+        : player,
+    );
+
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
   };
+
+  const calculateScore = (dice: number[]) => {
+    const max = getDiceMax();
+
+    switch (gameMode) {
+      case "sum":
+        return dice.reduce((sum, value) => sum + value, 0);
+      case "multiply":
+        return dice.reduce((product, value) => product * value, 1);
+      case "highest":
+        return Math.max(...dice);
+      case "lowest":
+        return Math.min(...dice);
+      case "pairs":
+        const counts = new Array(max + 1).fill(0);
+        dice.forEach((value) => counts[value]++);
+        const pairs = counts.filter((count) => count >= 2).length;
+        return pairs * 10;
+      default:
+        return dice.reduce((sum, value) => sum + value, 0);
+    }
+  };
+
+  const endTurn = () => {
+    const currentPlayer = players[currentPlayerIndex];
+    if (!currentPlayer) return;
+
+    const score = calculateScore(currentPlayer.dice);
+    const newRoundScores = [...roundScores];
+    if (!newRoundScores[currentRound - 1]) {
+      newRoundScores[currentRound - 1] = {};
+    }
+    newRoundScores[currentRound - 1]![currentPlayer.id] = score;
+
+    const updatedPlayers = players.map((player, index) =>
+      index === currentPlayerIndex
+        ? {
+            ...player,
+            score: player.score + score,
+            rollsLeft: 3,
+            dice: [1, 1, 1, 1, 1],
+          }
+        : player,
+    );
+
+    let nextPlayerIndex = currentPlayerIndex + 1;
+    let nextRound = currentRound;
+
+    if (nextPlayerIndex >= players.length) {
+      nextPlayerIndex = 0;
+      nextRound = currentRound + 1;
+    }
+
+    setCurrentPlayerIndex(nextPlayerIndex);
+    setCurrentRound(nextRound);
+    setRoundScores(newRoundScores);
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+          currentRound: nextRound,
+          currentPlayerIndex: nextPlayerIndex,
+          roundScores: newRoundScores,
+        });
+        saveRooms(rooms);
+      }
+    }
+
+    if (nextRound > totalRounds) {
+      void confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  };
+
+  const generateRoomCode = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setRoomCode(code);
+    setShowRoomInfo(true);
+
+    const rooms = getRooms();
+    rooms.set(code, {
+      players: [
+        {
+          id: 1,
+          name: "Host",
+          isHost: true,
+          score: 0,
+          dice: [1, 1, 1, 1, 1],
+          isCurrentTurn: false,
+          rollsLeft: 3,
+        },
+      ],
+      totalRounds,
+      gameMode,
+      diceType,
+      gameStarted: false,
+      currentRound: 1,
+      currentPlayerIndex: 0,
+      roundScores: [],
+    });
+    saveRooms(rooms);
+  };
+
+  const removePlayer = (id: number) => {
+    if (id !== 1) {
+      const updatedPlayers = players.filter((player) => player.id !== id);
+      setPlayers(updatedPlayers);
+
+      if (roomCode) {
+        const rooms = getRooms();
+        const room = rooms.get(roomCode);
+        if (room) {
+          rooms.set(roomCode, {
+            ...room,
+            players: updatedPlayers,
+          });
+          saveRooms(rooms);
+        }
+      }
+    }
+  };
+
+  const updatePlayerName = (id: number, name: string) => {
+    const updatedPlayers = players.map((player) =>
+      player.id === id ? { ...player, name } : player,
+    );
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
+  };
+
+  const startGame = async () => {
+    if (!hostName.trim()) {
+      alert("Please enter your name to start the game!");
+      return;
+    }
+    if (players.length < 2) {
+      alert("You need at least 2 players to start the game!");
+      return;
+    }
+
+    const gamePlayers = players.map((player, index) => ({
+      ...player,
+      score: 0,
+      dice: [1, 1, 1, 1, 1],
+      isCurrentTurn: index === 0,
+      rollsLeft: 3,
+    }));
+
+    setPlayers(gamePlayers);
+    setGameStarted(true);
+    setCurrentPlayerIndex(0);
+    setCurrentRound(1);
+    setRoundScores([]);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: gamePlayers,
+          gameStarted: true,
+          currentRound: 1,
+          currentPlayerIndex: 0,
+          roundScores: [],
+        });
+        saveRooms(rooms);
+      }
+    }
+
+    void confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+  };
+
+  const copyRoomCode = async () => {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCopyStatus("Copied!");
+      setTimeout(() => setCopyStatus("Copy"), 2000);
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = roomCode;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
+      } catch {}
+      document.body.removeChild(textArea);
+      setCopyStatus("Copied!");
+      setTimeout(() => setCopyStatus("Copy"), 2000);
+    }
+  };
+
+  const isGameOver = currentRound > totalRounds;
 
   return (
     <main
@@ -116,7 +362,7 @@ export default function CreateRoomPage() {
         </Link>
 
         <h1 className="mb-8 text-4xl font-bold text-white">
-          🎲 Create Private Room
+          Create Private Room ^_^
         </h1>
 
         {!gameStarted ? (
@@ -217,9 +463,9 @@ export default function CreateRoomPage() {
                       </span>
                       <button
                         onClick={copyRoomCode}
-                        className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+                        className="rounded bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700"
                       >
-                        Copy
+                        {copyStatus}
                       </button>
                     </div>
                   </div>
@@ -266,14 +512,6 @@ export default function CreateRoomPage() {
                       </div>
                     ))}
                   </div>
-                  {players.length < 6 && (
-                    <button
-                      onClick={addPlayer}
-                      className="mt-2 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                    >
-                      Add Player
-                    </button>
-                  )}
                 </div>
 
                 <button
@@ -288,59 +526,178 @@ export default function CreateRoomPage() {
           </div>
         ) : (
           <div className="text-center">
-            <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
-              <h2 className="mb-4 text-3xl font-bold text-white">
-                🎉 Game Started!
-              </h2>
-              <p className="mb-4 text-xl text-green-300">
-                Room Code: {roomCode}
-              </p>
-              <p className="text-gray-300">
-                Waiting for players to join... ({players.length}/6 players)
-              </p>
-            </div>
-
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {players.map((player) => (
-                <div
-                  key={player.id}
-                  className={`rounded-lg p-4 ${
-                    player.isHost
-                      ? "border-2 border-green-400 bg-green-400/20"
-                      : "bg-white/10"
-                  }`}
+            {isGameOver ? (
+              <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
+                <h2 className="mb-4 text-3xl font-bold text-white">
+                  🎉 Game Over!
+                </h2>
+                <p className="mb-4 text-xl text-green-300">
+                  Room Code: {roomCode}
+                </p>
+                <div className="mb-6">
+                  <h3 className="mb-4 text-xl font-bold text-white">
+                    Final Scores:
+                  </h3>
+                  <div className="space-y-2">
+                    {players
+                      .sort((a, b) => b.score - a.score)
+                      .map((player, index) => (
+                        <div
+                          key={player.id}
+                          className={`rounded-lg p-3 ${
+                            index === 0
+                              ? "border-2 border-yellow-400 bg-yellow-400/20"
+                              : "bg-white/10"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-bold text-white">
+                              {index + 1}. {player.name} {index === 0 && "👑"}
+                            </span>
+                            <span className="text-xl font-bold text-green-300">
+                              {player.score} points
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setGameStarted(false)}
+                  className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
                 >
-                  <div className="text-center">
-                    <div className="mb-2 text-2xl">
-                      {player.isHost ? "👑" : "👤"}
-                    </div>
-                    <h3
-                      className={`text-lg font-bold ${
-                        player.isHost ? "text-green-300" : "text-white"
-                      }`}
-                    >
-                      {player.name}
-                    </h3>
-                    {player.isHost && (
-                      <p className="text-sm text-green-300">Host</p>
+                  Back to Setup
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
+                  <h2 className="mb-4 text-3xl font-bold text-white">
+                    🎲 Game in Progress!
+                  </h2>
+                  <p className="mb-4 text-xl text-green-300">
+                    Room Code: {roomCode}
+                  </p>
+                  <p className="text-gray-300">
+                    Round {currentRound} of {totalRounds} • {players.length}{" "}
+                    players
+                  </p>
+                </div>
+
+                <div className="mb-8 rounded-lg bg-white/10 p-6">
+                  <h3 className="mb-4 text-xl font-bold text-white">
+                    {players[currentPlayerIndex]?.name}&apos;s Turn
+                  </h3>
+                  <p className="mb-4 text-gray-300">
+                    Rolls left: {players[currentPlayerIndex]?.rollsLeft ?? 0}
+                  </p>
+
+                  <div className="mb-6 grid grid-cols-5 gap-4">
+                    {players[currentPlayerIndex]?.dice?.map((value, index) => (
+                      <div
+                        key={index}
+                        className="h-16 w-16 rounded-lg bg-white text-center text-2xl leading-[4rem] font-bold text-gray-800 shadow-lg"
+                      >
+                        {value}
+                      </div>
+                    )) ?? null}
+                  </div>
+
+                  <div className="flex justify-center space-x-4">
+                    {players[currentPlayerIndex]?.id === 1 &&
+                      (players[currentPlayerIndex]?.rollsLeft ?? 0) > 0 && (
+                        <button
+                          onClick={rollDice}
+                          className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+                        >
+                          Roll Dice
+                        </button>
+                      )}
+                    {players[currentPlayerIndex]?.id === 1 &&
+                      (players[currentPlayerIndex]?.rollsLeft ?? 0) < 3 && (
+                        <button
+                          onClick={endTurn}
+                          className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700"
+                        >
+                          End Turn
+                        </button>
+                      )}
+                    {players[currentPlayerIndex]?.id !== 1 && (
+                      <p className="text-lg font-bold text-blue-300">
+                        Waiting for {players[currentPlayerIndex]?.name} to
+                        play...
+                      </p>
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
 
-            <div className="space-y-4">
-              <p className="text-gray-300">
-                Game Settings: {totalRounds} rounds, {gameMode} mode, {diceType}{" "}
-                dice
-              </p>
-              <button
-                onClick={() => setGameStarted(false)}
-                className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
-              >
-                Back to Setup
-              </button>
-            </div>
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {players.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className={`rounded-lg p-4 ${
+                        index === currentPlayerIndex
+                          ? "border-2 border-blue-400 bg-blue-400/20"
+                          : player.isHost
+                            ? "border-2 border-green-400 bg-green-400/20"
+                            : "bg-white/10"
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="mb-2 text-2xl">
+                          {player.isHost ? (
+                            <FontAwesomeIcon
+                              icon={faCrown}
+                              className="text-yellow-400"
+                            />
+                          ) : index === currentPlayerIndex ? (
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              className="text-blue-300"
+                            />
+                          ) : (
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              className="text-white"
+                            />
+                          )}
+                        </div>
+                        <h3
+                          className={`text-lg font-bold ${
+                            index === currentPlayerIndex
+                              ? "text-blue-300"
+                              : player.isHost
+                                ? "text-green-300"
+                                : "text-white"
+                          }`}
+                        >
+                          {player.name}
+                        </h3>
+                        <p className="text-xl font-bold text-yellow-300">
+                          {player.score} pts
+                        </p>
+                        {index === currentPlayerIndex && (
+                          <p className="text-sm text-blue-300">Current Turn</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-gray-300">
+                    Game Settings: {totalRounds} rounds, {gameMode} mode,{" "}
+                    {diceType} dice
+                  </p>
+                  <button
+                    onClick={() => setGameStarted(false)}
+                    className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
+                  >
+                    Back to Setup
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

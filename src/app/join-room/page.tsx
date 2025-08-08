@@ -1,14 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faCrown } from "@fortawesome/free-solid-svg-icons";
 
 interface Player {
   id: number;
   name: string;
   isHost: boolean;
+  score: number;
+  dice: number[];
+  isCurrentTurn: boolean;
+  rollsLeft: number;
 }
+
+interface RoomData {
+  players: Player[];
+  totalRounds: number;
+  gameMode: string;
+  diceType: string;
+  gameStarted: boolean;
+  currentRound: number;
+  currentPlayerIndex: number;
+  roundScores: Record<number, number>[];
+}
+
+const getRooms = (): Map<string, RoomData> => {
+  if (typeof window === "undefined") return new Map();
+
+  const stored = localStorage.getItem("dice-game-rooms");
+  if (stored) {
+    const parsed = JSON.parse(stored) as Record<string, RoomData>;
+    return new Map(Object.entries(parsed));
+  }
+  return new Map();
+};
+
+const saveRooms = (rooms: Map<string, RoomData>) => {
+  if (typeof window === "undefined") return;
+
+  const obj = Object.fromEntries(rooms);
+  localStorage.setItem("dice-game-rooms", JSON.stringify(obj));
+};
 
 export default function JoinRoomPage() {
   const [roomCode, setRoomCode] = useState("");
@@ -20,9 +55,50 @@ export default function JoinRoomPage() {
   const [gameMode, setGameMode] = useState("classic");
   const [diceType, setDiceType] = useState("6-sided");
   const [players, setPlayers] = useState<Player[]>([
-    { id: 1, name: "Host", isHost: true },
-    { id: 2, name: "Player 2", isHost: false },
+    {
+      id: 1,
+      name: "Host",
+      isHost: true,
+      score: 0,
+      dice: [1, 1, 1, 1, 1],
+      isCurrentTurn: false,
+      rollsLeft: 3,
+    },
+    {
+      id: 2,
+      name: "Player 2",
+      isHost: false,
+      score: 0,
+      dice: [1, 1, 1, 1, 1],
+      isCurrentTurn: false,
+      rollsLeft: 3,
+    },
   ]);
+  const [currentPlayerId, setCurrentPlayerId] = useState<number | null>(null);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [roundScores, setRoundScores] = useState<Record<number, number>[]>([]);
+
+  useEffect(() => {
+    if (roomCode && hasJoined) {
+      const interval = setInterval(() => {
+        const rooms = getRooms();
+        const room = rooms.get(roomCode);
+        if (room) {
+          setPlayers(room.players);
+          setTotalRounds(room.totalRounds);
+          setGameMode(room.gameMode);
+          setDiceType(room.diceType);
+          setGameStarted(room.gameStarted);
+          setCurrentRound(room.currentRound || 1);
+          setCurrentPlayerIndex(room.currentPlayerIndex || 0);
+          setRoundScores(room.roundScores || []);
+        }
+      }, 2000);
+
+      return () => clearInterval(interval);
+    }
+  }, [roomCode, hasJoined]);
 
   const joinRoom = () => {
     if (!roomCode.trim()) {
@@ -40,23 +116,71 @@ export default function JoinRoomPage() {
 
     setIsJoining(true);
 
-    // Simulate joining process
+    const rooms = getRooms();
+    const room = rooms.get(roomCode);
+    if (!room) {
+      setTimeout(() => {
+        setIsJoining(false);
+        alert("Room not found! Please check the room code.");
+      }, 1500);
+      return;
+    }
+
+    if (room.players.length >= 6) {
+      setTimeout(() => {
+        setIsJoining(false);
+        alert("Room is full! Please try another room.");
+      }, 1500);
+      return;
+    }
+
     setTimeout(() => {
+      const newPlayerId = Date.now();
+      const newPlayer = {
+        id: newPlayerId,
+        name: playerName,
+        isHost: false,
+        score: 0,
+        dice: [1, 1, 1, 1, 1],
+        isCurrentTurn: false,
+        rollsLeft: 3,
+      };
+
+      const updatedPlayers = [...room.players, newPlayer];
+
+      rooms.set(roomCode, {
+        ...room,
+        players: updatedPlayers,
+      });
+      saveRooms(rooms);
+
+      setPlayers(updatedPlayers);
+      setCurrentPlayerId(newPlayerId);
       setIsJoining(false);
       setHasJoined(true);
-
-      setPlayers([
-        ...players,
-        { id: Date.now(), name: playerName, isHost: false },
-      ]);
 
       void confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
     }, 1500);
   };
 
-  const startGame = () => {
-    setGameStarted(true);
-    void confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+  const leaveRoom = () => {
+    if (roomCode && currentPlayerId) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        const updatedPlayers = room.players.filter(
+          (p) => p.id !== currentPlayerId,
+        );
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
+    setHasJoined(false);
+    setCurrentPlayerId(null);
+    setGameStarted(false);
   };
 
   const getDiceMax = () => {
@@ -71,16 +195,112 @@ export default function JoinRoomPage() {
     return maxMap[diceType as keyof typeof maxMap] || 6;
   };
 
-  const getScoreDescription = (score: number) => {
-    const descriptions = {
-      sum: "Sum",
-      multiply: "Product",
-      highest: "Highest",
-      lowest: "Lowest",
-      pairs: "Pairs",
-    };
-    return `${descriptions[gameMode as keyof typeof descriptions] || "Score"}: ${score}`;
+  const rollDice = () => {
+    const currentPlayer = players[currentPlayerIndex];
+    if (
+      !currentPlayer ||
+      currentPlayer.rollsLeft <= 0 ||
+      currentPlayer.id !== currentPlayerId
+    )
+      return;
+
+    const max = getDiceMax();
+    const newDice = currentPlayer.dice?.map(
+      () => Math.floor(Math.random() * max) + 1,
+    ) || [1, 1, 1, 1, 1];
+
+    const updatedPlayers = players.map((player, index) =>
+      index === currentPlayerIndex
+        ? { ...player, dice: newDice, rollsLeft: player.rollsLeft - 1 }
+        : player,
+    );
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
   };
+
+  const calculateScore = (dice: number[]) => {
+    const max = getDiceMax();
+
+    switch (gameMode) {
+      case "sum":
+        return dice.reduce((sum, value) => sum + value, 0);
+      case "multiply":
+        return dice.reduce((product, value) => product * value, 1);
+      case "highest":
+        return Math.max(...dice);
+      case "lowest":
+        return Math.min(...dice);
+      case "pairs":
+        const counts = new Array(max + 1).fill(0);
+        dice.forEach((value) => counts[value]++);
+        const pairs = counts.filter((count) => count >= 2).length;
+        return pairs * 10;
+      default:
+        return dice.reduce((sum, value) => sum + value, 0);
+    }
+  };
+
+  const endTurn = () => {
+    const currentPlayer = players[currentPlayerIndex];
+    if (!currentPlayer || currentPlayer.id !== currentPlayerId) return;
+
+    const score = calculateScore(currentPlayer.dice);
+    const newRoundScores = [...roundScores];
+    if (!newRoundScores[currentRound - 1]) {
+      newRoundScores[currentRound - 1] = {};
+    }
+    newRoundScores[currentRound - 1]![currentPlayer.id] = score;
+
+    const updatedPlayers = players.map((player, index) =>
+      index === currentPlayerIndex
+        ? {
+            ...player,
+            score: player.score + score,
+            rollsLeft: 3,
+            dice: [1, 1, 1, 1, 1],
+          }
+        : player,
+    );
+
+    let nextPlayerIndex = currentPlayerIndex + 1;
+    let nextRound = currentRound;
+
+    if (nextPlayerIndex >= players.length) {
+      nextPlayerIndex = 0;
+      nextRound = currentRound + 1;
+    }
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+          currentRound: nextRound,
+          currentPlayerIndex: nextPlayerIndex,
+          roundScores: newRoundScores,
+        });
+        saveRooms(rooms);
+      }
+    }
+
+    if (nextRound > totalRounds) {
+      void confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  };
+
+  const isGameOver = currentRound > totalRounds;
 
   return (
     <main
@@ -98,7 +318,7 @@ export default function JoinRoomPage() {
         </Link>
 
         <h1 className="mb-8 text-4xl font-bold text-white">
-          🎲 Join Private Room
+          Join Private Room ^_^
         </h1>
 
         {!hasJoined ? (
@@ -136,7 +356,7 @@ export default function JoinRoomPage() {
             <button
               onClick={joinRoom}
               disabled={!roomCode.trim() || !playerName.trim() || isJoining}
-              className="rounded-lg bg-orange-600 px-8 py-3 text-white hover:bg-orange-700 disabled:opacity-50"
+              className="rounded-lg bg-green-600 px-8 py-3 text-white hover:bg-green-700 disabled:opacity-50"
             >
               {isJoining ? (
                 <div className="flex items-center space-x-2">
@@ -150,16 +370,17 @@ export default function JoinRoomPage() {
           </div>
         ) : !gameStarted ? (
           <div className="mb-8 text-center">
-            <div className="mb-6 rounded-lg bg-gradient-to-br from-orange-900 to-red-900 p-6">
+            <div className="mb-6 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-6">
               <h3 className="mb-4 text-xl font-bold text-white">
                 🎉 Successfully Joined!
               </h3>
-              <p className="mb-2 text-lg text-orange-300">
+              <p className="mb-2 text-lg text-green-300">
                 Room Code: {roomCode}
               </p>
               <p className="text-gray-300">
                 Welcome, {playerName}! Waiting for the host to start the game...
               </p>
+              <p className="mt-2 text-xs text-green-300"></p>
             </div>
 
             <div className="mb-6 rounded-lg bg-white/10 p-4">
@@ -173,21 +394,34 @@ export default function JoinRoomPage() {
                     className={`flex items-center space-x-2 rounded p-2 ${
                       player.isHost
                         ? "border border-green-400 bg-green-400/20"
-                        : "bg-white/5"
+                        : player.id === currentPlayerId
+                          ? "border border-orange-400 bg-orange-400/20"
+                          : "bg-white/5"
                     }`}
                   >
                     <span className="text-lg">
-                      {player.isHost ? "👑" : "👤"}
+                      {player.isHost
+                        ? "👑"
+                        : player.id === currentPlayerId
+                          ? "👤"
+                          : "👤"}
                     </span>
                     <span
                       className={`font-medium ${
-                        player.isHost ? "text-green-300" : "text-white"
+                        player.isHost
+                          ? "text-green-300"
+                          : player.id === currentPlayerId
+                            ? "text-orange-300"
+                            : "text-white"
                       }`}
                     >
                       {player.name}
                     </span>
                     {player.isHost && (
                       <span className="text-xs text-green-300">(Host)</span>
+                    )}
+                    {player.id === currentPlayerId && (
+                      <span className="text-xs text-orange-300">(You)</span>
                     )}
                   </div>
                 ))}
@@ -208,7 +442,7 @@ export default function JoinRoomPage() {
                 Waiting for host to start the game...
               </p>
               <button
-                onClick={() => setHasJoined(false)}
+                onClick={leaveRoom}
                 className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
               >
                 Leave Room
@@ -217,76 +451,198 @@ export default function JoinRoomPage() {
           </div>
         ) : (
           <div className="text-center">
-            <div className="mb-8 rounded-lg bg-gradient-to-br from-orange-900 to-red-900 p-8">
-              <h2 className="mb-4 text-3xl font-bold text-white">
-                🎉 Game Started!
-              </h2>
-              <p className="mb-4 text-xl text-orange-300">
-                Room Code: {roomCode}
-              </p>
-              <p className="text-gray-300">
-                Game is ready to begin! ({players.length}/6 players)
-              </p>
-            </div>
-
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {players.map((player) => (
-                <div
-                  key={player.id}
-                  className={`rounded-lg p-4 ${
-                    player.isHost
-                      ? "border-2 border-green-400 bg-green-400/20"
-                      : player.name === playerName
-                        ? "border-2 border-orange-400 bg-orange-400/20"
-                        : "bg-white/10"
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="mb-2 text-2xl">
-                      {player.isHost ? "👑" : "👤"}
-                    </div>
-                    <h3
-                      className={`text-lg font-bold ${
-                        player.isHost
-                          ? "text-green-300"
-                          : player.name === playerName
-                            ? "text-orange-300"
-                            : "text-white"
-                      }`}
-                    >
-                      {player.name}
-                    </h3>
-                    {player.isHost && (
-                      <p className="text-sm text-green-300">Host</p>
-                    )}
-                    {player.name === playerName && (
-                      <p className="text-sm text-orange-300">You</p>
-                    )}
+            {isGameOver ? (
+              <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
+                <h2 className="mb-4 text-3xl font-bold text-white">
+                  🎉 Game Over!
+                </h2>
+                <p className="mb-4 text-xl text-green-300">
+                  Room Code: {roomCode}
+                </p>
+                <div className="mb-6">
+                  <h3 className="mb-4 text-xl font-bold text-white">
+                    Final Scores:
+                  </h3>
+                  <div className="space-y-2">
+                    {players
+                      .sort((a, b) => b.score - a.score)
+                      .map((player, index) => (
+                        <div
+                          key={player.id}
+                          className={`rounded-lg p-3 ${
+                            index === 0
+                              ? "border-2 border-yellow-400 bg-yellow-400/20"
+                              : "bg-white/10"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-bold text-white">
+                              {index + 1}. {player.name} {index === 0 && "👑"}
+                            </span>
+                            <span className="text-xl font-bold text-green-300">
+                              {player.score} points
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <p className="text-gray-300">
-                Game Settings: {totalRounds} rounds, {gameMode} mode, {diceType}{" "}
-                dice
-              </p>
-              <div className="flex justify-center space-x-4">
                 <button
-                  onClick={() => setGameStarted(false)}
+                  onClick={leaveRoom}
                   className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
-                >
-                  Back to Room
-                </button>
-                <button
-                  onClick={() => setHasJoined(false)}
-                  className="rounded-lg bg-red-600 px-6 py-2 text-white hover:bg-red-700"
                 >
                   Leave Game
                 </button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
+                  <h2 className="mb-4 text-3xl font-bold text-white">
+                    🎲 Game in Progress!
+                  </h2>
+                  <p className="mb-4 text-xl text-green-300">
+                    Room Code: {roomCode}
+                  </p>
+                  <p className="text-gray-300">
+                    Round {currentRound} of {totalRounds} • {players.length}{" "}
+                    players
+                  </p>
+                </div>
+
+                <div className="mb-8 rounded-lg bg-white/10 p-6">
+                  <h3 className="mb-4 text-xl font-bold text-white">
+                    {players[currentPlayerIndex]?.name}&apos;s Turn
+                  </h3>
+                  <p className="mb-4 text-gray-300">
+                    Rolls left: {players[currentPlayerIndex]?.rollsLeft ?? 0}
+                  </p>
+
+                  <div className="mb-6 grid grid-cols-5 gap-4">
+                    {players[currentPlayerIndex]?.dice?.map((value, index) => (
+                      <div
+                        key={index}
+                        className="h-16 w-16 rounded-lg bg-white text-center text-2xl leading-[4rem] font-bold text-gray-800 shadow-lg"
+                      >
+                        {value}
+                      </div>
+                    )) ?? null}
+                  </div>
+
+                  <div className="text-center">
+                    {currentPlayerId === players[currentPlayerIndex]?.id ? (
+                      <div className="space-y-4">
+                        <p className="text-lg font-bold text-green-300">
+                          It&apos;s your turn!
+                        </p>
+                        <div className="flex justify-center space-x-4">
+                          {(players[currentPlayerIndex]?.rollsLeft ?? 0) >
+                            0 && (
+                            <button
+                              onClick={rollDice}
+                              className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+                            >
+                              Roll Dice
+                            </button>
+                          )}
+                          {(players[currentPlayerIndex]?.rollsLeft ?? 0) <
+                            3 && (
+                            <button
+                              onClick={endTurn}
+                              className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700"
+                            >
+                              End Turn
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-lg font-bold text-blue-300">
+                        Waiting for {players[currentPlayerIndex]?.name} to
+                        play...
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {players.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className={`rounded-lg p-4 ${
+                        index === currentPlayerIndex
+                          ? "border-2 border-blue-400 bg-blue-400/20"
+                          : player.isHost
+                            ? "border-2 border-green-400 bg-green-400/20"
+                            : player.id === currentPlayerId
+                              ? "border-2 border-green-400 bg-green-400/20"
+                              : "bg-white/10"
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="mb-2 text-2xl">
+                          {player.isHost ? (
+                            <FontAwesomeIcon
+                              icon={faCrown}
+                              className="text-yellow-400"
+                            />
+                          ) : index === currentPlayerIndex ? (
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              className="text-blue-300"
+                            />
+                          ) : player.id === currentPlayerId ? (
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              className="text-green-300"
+                            />
+                          ) : (
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              className="text-white"
+                            />
+                          )}
+                        </div>
+                        <h3
+                          className={`text-lg font-bold ${
+                            index === currentPlayerIndex
+                              ? "text-blue-300"
+                              : player.isHost
+                                ? "text-green-300"
+                                : player.id === currentPlayerId
+                                  ? "text-green-300"
+                                  : "text-white"
+                          }`}
+                        >
+                          {player.name}
+                        </h3>
+                        <p className="text-xl font-bold text-yellow-300">
+                          {player.score} pts
+                        </p>
+                        {index === currentPlayerIndex && (
+                          <p className="text-sm text-blue-300">Current Turn</p>
+                        )}
+                        {player.id === currentPlayerId && (
+                          <p className="text-sm text-green-300">You</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-gray-300">
+                    Game Settings: {totalRounds} rounds, {gameMode} mode,{" "}
+                    {diceType} dice
+                  </p>
+                  <button
+                    onClick={leaveRoom}
+                    className="rounded-lg bg-red-600 px-6 py-2 text-white hover:bg-red-700"
+                  >
+                    Leave Game
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
