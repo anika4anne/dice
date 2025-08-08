@@ -11,6 +11,8 @@ npm start
 
 Website: (https://dice-wheat.vercel.app/)
 
+Some things to know: I've got the background image for free from google (yes i've check for copyright and it's made for people to use)
+
 Images:
 This is the homepage
 
