@@ -1,29 +1,51 @@
-# Create T3 App
+# Dice Game
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/9b073204-ce68-4c7b-8b04-08fa36dcf527" />
 
-## What's next? How do I make an app with this?
+You can clone my website with the following commands (if you want to)
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+git clone [https://github.com/your-username/your-repo](https://github.com/anika4anne/dice.git)]
+cd mind-method
+npm install
+npm start
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+Website: (https://dice-wheat.vercel.app/)
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+Images:
+This is the homepage
 
-## Learn More
+<img width="1726" height="1057" alt="image" src="https://github.com/user-attachments/assets/9b404dbb-079b-445d-8787-8b9e23c8e127" />
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+Play Solo 
+You can change the game settings, there are multiple ways to play the game (<img width="242" height="150" alt="image" src="https://github.com/user-attachments/assets/0ccaa5d2-2e13-4070-afdb-05d32a526662" />
+)
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+<img width="677" height="685" alt="image" src="https://github.com/user-attachments/assets/5cdbb217-218a-403e-ad85-039534fbd3d6" />
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
 
-## How do I deploy this?
+This is how it looks whne you start the game
+<img width="870" height="617" alt="image" src="https://github.com/user-attachments/assets/e16416b6-db1e-4888-9f39-54fc2cc7eb37" />
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+Multplayer: 
+You can add up to 6 people, and they will all play on the same laptop
+<img width="621" height="660" alt="image" src="https://github.com/user-attachments/assets/a616461e-110b-4af0-a6e6-9a88159ee9fa" />
+
+<img width="807" height="563" alt="image" src="https://github.com/user-attachments/assets/9193a099-2fd9-4c49-8a03-42f9a139d9fd" />
+
+
+Create Private Room:
+You can create a separate room for your friends where they play on their own devices
+<img width="799" height="927" alt="image" src="https://github.com/user-attachments/assets/4ac81df6-4706-461b-a234-df7b8e3efc86" />
+
+<img width="1681" height="999" alt="image" src="https://github.com/user-attachments/assets/3c20bc23-f2a2-476e-8a93-9ad089654f74" />
+
+I've also added a confetti thing, so when a new player joins it shows up
+
+Join private room: 
+
+<img width="822" height="996" alt="image" src="https://github.com/user-attachments/assets/5823b320-f9f6-41ba-bc45-68a064fa60db" />
+
+<img width="1681" height="999" alt="image" src="https://github.com/user-attachments/assets/d8bc5e30-f1b6-446e-ab71-40cc00495d02" />
+
+
+
