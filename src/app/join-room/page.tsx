@@ -79,6 +79,7 @@ export default function JoinRoomPage() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [roundScores, setRoundScores] = useState<Record<number, number>[]>([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [hasBeenRemoved, setHasBeenRemoved] = useState(false);
 
   useEffect(() => {
     if (roomCode && hasJoined) {
@@ -86,6 +87,15 @@ export default function JoinRoomPage() {
         const rooms = getRooms();
         const room = rooms.get(roomCode);
         if (room) {
+          const isPlayerStillInRoom = room.players.some(
+            (p) => p.id === currentPlayerId,
+          );
+
+          if (!isPlayerStillInRoom && currentPlayerId) {
+            setHasBeenRemoved(true);
+            return;
+          }
+
           setPlayers(room.players);
           setTotalRounds(room.totalRounds);
           setGameMode(room.gameMode);
@@ -99,7 +109,7 @@ export default function JoinRoomPage() {
 
       return () => clearInterval(interval);
     }
-  }, [roomCode, hasJoined]);
+  }, [roomCode, hasJoined, currentPlayerId]);
 
   const joinRoom = () => {
     if (!roomCode.trim()) {
@@ -159,8 +169,7 @@ export default function JoinRoomPage() {
       setCurrentPlayerId(newPlayerId);
       setIsJoining(false);
       setHasJoined(true);
-
-      void confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
+      setHasBeenRemoved(false);
     }, 1500);
   };
 
@@ -182,6 +191,7 @@ export default function JoinRoomPage() {
     setHasJoined(false);
     setCurrentPlayerId(null);
     setGameStarted(false);
+    setHasBeenRemoved(false);
   };
 
   const getDiceMax = () => {
@@ -322,7 +332,36 @@ export default function JoinRoomPage() {
           Join Private Room ^_^
         </h1>
 
-        {!hasJoined ? (
+        {hasBeenRemoved ? (
+          <div className="mb-8 text-center">
+            <div className="rounded-md border-2 border-red-500 bg-white/10 p-6 shadow-xl backdrop-blur-sm">
+              <h2 className="mb-4 text-2xl font-bold text-white">
+                ❌ You have been removed from the room
+              </h2>
+              <div className="space-x-4">
+                <button
+                  onClick={() => {
+                    setHasBeenRemoved(false);
+                    setRoomCode("");
+                    setPlayerName("");
+                    setHasJoined(false);
+                    setCurrentPlayerId(null);
+                    setGameStarted(false);
+                  }}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+                >
+                  Join Another Room
+                </button>
+                <Link
+                  href="/create-room"
+                  className="inline-block rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700"
+                >
+                  Create New Room
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : !hasJoined ? (
           <div className="mb-8 text-center">
             <h2 className="mb-4 text-2xl font-bold text-white">Join a Game</h2>
 
