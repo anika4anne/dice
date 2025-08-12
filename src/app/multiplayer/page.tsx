@@ -358,7 +358,7 @@ export default function MultiplayerPage() {
                           }
                         }}
                         className="flex-1 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-white"
-                        placeholder="Enter unique name"
+                        placeholder="Enter name"
                       />
                       <button
                         onClick={() =>
