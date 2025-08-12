@@ -1,6 +1,7 @@
 # Dice Game
 
-<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/9b073204-ce68-4c7b-8b04-08fa36dcf527" />
+[![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
+</div>
 
 You can clone my website with the following commands (if you want to)
 
