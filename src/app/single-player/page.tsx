@@ -106,13 +106,13 @@ export default function SinglePlayerPage() {
 
     let roundWinner = "";
     if (playerTotal > robotTotal) {
-      roundWinner = `${playerName || "You"} win this round!`;
+      roundWinner = `${playerName || "you"} win this round!`;
       setPlayerWins((prev) => prev + 1);
     } else if (robotTotal > playerTotal) {
-      roundWinner = "Robot wins this round!";
+      roundWinner = "robot wins this round!";
       setRobotWins((prev) => prev + 1);
     } else {
-      roundWinner = "It's a tie!";
+      roundWinner = "its a tie!";
     }
 
     setWinner(roundWinner);
@@ -134,27 +134,27 @@ export default function SinglePlayerPage() {
 
       const gameWinner =
         finalPlayerWins > finalRobotWins
-          ? `${playerName || "You"} win the game!`
-          : "Robot wins the game!";
+          ? `${playerName || "you"} win the game!`
+          : "robot wins the game!";
 
       setWinner(`${roundWinner} ${gameWinner}`);
 
       const playerFinalScore =
         finalPlayerWins > finalRobotWins ? playerTotal : playerTotal;
       const robotFinalScore =
-        finalRobotWins > finalPlayerWins ? robotTotal : robotTotal;
+        finalRobotWins > playerTotal ? robotTotal : robotTotal;
 
       const results = [
         {
           name:
-            finalPlayerWins > finalRobotWins ? playerName || "You" : "Robot",
+            finalPlayerWins > finalRobotWins ? playerName || "you" : "robot",
           wins: Math.max(finalPlayerWins, finalRobotWins),
           score: Math.max(playerFinalScore, robotFinalScore),
           isWinner: true,
         },
         {
           name:
-            finalPlayerWins > finalRobotWins ? "Robot" : playerName || "You",
+            finalPlayerWins > finalRobotWins ? "robot" : playerName || "you",
           wins: Math.min(finalPlayerWins, finalRobotWins),
           score: Math.min(playerFinalScore, robotFinalScore),
           isWinner: false,
@@ -181,7 +181,7 @@ export default function SinglePlayerPage() {
 
   const startGame = () => {
     if (!playerName.trim()) {
-      alert("Please enter your name to start the game!");
+      alert("enter your name to start!");
       return;
     }
     setGameStarted(true);
@@ -210,12 +210,12 @@ export default function SinglePlayerPage() {
   };
 
   const getScoreDescription = (score: number) => {
-    if (gameMode === "sum") return `Sum: ${score}`;
-    if (gameMode === "multiply") return `Product: ${score}`;
-    if (gameMode === "highest") return `Highest: ${score}`;
-    if (gameMode === "lowest") return `Lowest: ${score}`;
-    if (gameMode === "pairs") return `Pairs: ${score}`;
-    return `Score: ${score}`;
+    if (gameMode === "sum") return `sum: ${score}`;
+    if (gameMode === "multiply") return `product: ${score}`;
+    if (gameMode === "highest") return `highest: ${score}`;
+    if (gameMode === "lowest") return `lowest: ${score}`;
+    if (gameMode === "pairs") return `pairs: ${score}`;
+    return `score: ${score}`;
   };
 
   return (
@@ -230,60 +230,58 @@ export default function SinglePlayerPage() {
     >
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <Link href="/" className="mb-8 text-blue-300 hover:text-blue-200">
-          ← Back to Home
+          ← back to home
         </Link>
 
-        <h1 className="mb-8 text-4xl font-bold text-white">🎲 Dice Game</h1>
+        <h1 className="mb-8 text-4xl font-bold text-white">🎲 dice game</h1>
 
         {!gameStarted ? (
           <div className="mb-8 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-white">Settings</h2>
+            <h2 className="mb-4 text-2xl font-bold text-white">settings</h2>
 
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-white">Your Name:</label>
+                <label className="mb-2 block text-white">your name:</label>
                 <input
                   type="text"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
-                  placeholder="Enter your name"
+                  placeholder="enter your name"
                   className="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-white">
-                  Number of Rounds:
-                </label>
+                <label className="mb-2 block text-white">rounds:</label>
                 <select
                   value={totalRounds}
                   onChange={(e) => setTotalRounds(Number(e.target.value))}
                   className="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white"
                 >
-                  <option value={3}>3 Rounds</option>
-                  <option value={5}>5 Rounds</option>
-                  <option value={7}>7 Rounds</option>
-                  <option value={10}>10 Rounds</option>
+                  <option value={3}>3 rounds</option>
+                  <option value={5}>5 rounds</option>
+                  <option value={7}>7 rounds</option>
+                  <option value={10}>10 rounds</option>
                 </select>
               </div>
 
               <div>
-                <label className="mb-2 block text-white">Game Mode:</label>
+                <label className="mb-2 block text-white">game mode:</label>
                 <select
                   value={gameMode}
                   onChange={(e) => setGameMode(e.target.value)}
                   className="w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-white"
                 >
-                  <option value="classic">Classic (Sum)</option>
-                  <option value="multiply">Multiply</option>
-                  <option value="highest">Highest Die</option>
-                  <option value="lowest">Lowest Die</option>
-                  <option value="pairs">Count Pairs</option>
+                  <option value="classic">classic (sum)</option>
+                  <option value="multiply">multiply</option>
+                  <option value="highest">highest die</option>
+                  <option value="lowest">lowest die</option>
+                  <option value="pairs">count pairs</option>
                 </select>
               </div>
 
               <div>
-                <label className="mb-2 block text-white">Dice Type:</label>
+                <label className="mb-2 block text-white">dice type:</label>
                 <select
                   value={diceType}
                   onChange={(e) => setDiceType(e.target.value)}
@@ -303,16 +301,16 @@ export default function SinglePlayerPage() {
               onClick={startGame}
               className="rounded-lg bg-green-600 px-8 py-3 text-white hover:bg-green-700"
             >
-              Start Game
+              start game
             </button>
 
             <div className="mt-8 rounded-lg bg-white/10 p-4">
-              <h3 className="mb-2 text-lg font-bold text-white">Statistics</h3>
+              <h3 className="mb-2 text-lg font-bold text-white">stats</h3>
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-300">
-                <div>Total Games: {stats.totalGames}</div>
-                <div>Your Wins: {stats.playerWins}</div>
-                <div>Robot Wins: {stats.robotWins}</div>
-                <div>Highest Score: {stats.highestScore}</div>
+                <div>total games: {stats.totalGames}</div>
+                <div>your wins: {stats.playerWins}</div>
+                <div>robot wins: {stats.robotWins}</div>
+                <div>highest score: {stats.highestScore}</div>
               </div>
             </div>
           </div>
@@ -320,20 +318,20 @@ export default function SinglePlayerPage() {
           <>
             <div className="mb-4 text-center">
               <p className="text-white">
-                Round {currentRound + 1} of {totalRounds}
+                round {currentRound + 1} of {totalRounds}
               </p>
               <p className="text-white">
-                Wins: {playerName || "You"} {playerWins} - Robot {robotWins}
+                wins: {playerName || "you"} {playerWins} - robot {robotWins}
               </p>
               <p className="text-sm text-gray-300">
-                Mode: {gameMode} | Dice: {diceType}
+                mode: {gameMode} | dice: {diceType}
               </p>
             </div>
 
             <div className="mb-8 grid grid-cols-2 gap-16">
               <div className="text-center">
                 <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                  {playerName || "You"}
+                  {playerName || "you"}
                 </h2>
                 <p className="mb-4 text-xl text-white">
                   {getScoreDescription(playerScore)}
@@ -353,7 +351,7 @@ export default function SinglePlayerPage() {
               </div>
 
               <div className="text-center">
-                <h2 className="mb-4 text-2xl font-bold text-red-400">Robot</h2>
+                <h2 className="mb-4 text-2xl font-bold text-red-400">robot</h2>
                 <p className="mb-4 text-xl text-white">
                   {getScoreDescription(robotScore)}
                 </p>
@@ -384,17 +382,17 @@ export default function SinglePlayerPage() {
                 className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:opacity-50"
                 disabled={isRolling}
               >
-                {isRolling ? "Rolling..." : "Roll Dice"}
+                {isRolling ? "rolling..." : "roll dice"}
               </button>
             )}
           </>
         )}
 
         {showLeaderboard && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-teal-900 to-emerald-700 p-8 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="w-full max-w-md rounded-xl bg-black p-8 shadow-2xl">
               <h2 className="mb-6 text-center text-3xl font-bold text-white">
-                🏆 Game Results 🏆
+                🏆 game results 🏆
               </h2>
 
               <div className="mb-6 space-y-4">
@@ -428,9 +426,8 @@ export default function SinglePlayerPage() {
                       <div className="text-lg font-bold text-white">
                         {player.score}
                       </div>
-                      <div className="text-xs text-gray-400">Final Score</div>
+                      <div className="text-xs text-gray-400">final score</div>
                     </div>
-                    ``
                   </div>
                 ))}
               </div>
@@ -440,13 +437,13 @@ export default function SinglePlayerPage() {
                   onClick={resetGame}
                   className="flex-1 rounded-lg bg-blue-600 px-4 py-3 text-white transition-colors hover:bg-blue-700"
                 >
-                  Play Again
+                  play again
                 </button>
                 <Link
                   href="/"
                   className="flex-1 rounded-lg bg-gray-600 px-4 py-3 text-center text-white transition-colors hover:bg-gray-700"
                 >
-                  Main Menu
+                  main menu
                 </Link>
               </div>
             </div>

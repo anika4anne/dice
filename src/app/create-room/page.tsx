@@ -69,6 +69,8 @@ export default function CreateRoomPage() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [roundScores, setRoundScores] = useState<Record<number, number>[]>([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
 
   useEffect(() => {
     if (roomCode && showRoomInfo) {
@@ -245,7 +247,19 @@ export default function CreateRoomPage() {
 
   const removePlayer = (id: number) => {
     if (id !== 1) {
-      const updatedPlayers = players.filter((player) => player.id !== id);
+      const player = players.find((p) => p.id === id);
+      if (player) {
+        setPlayerToRemove(player);
+        setShowRemoveConfirm(true);
+      }
+    }
+  };
+
+  const confirmRemovePlayer = () => {
+    if (playerToRemove) {
+      const updatedPlayers = players.filter(
+        (player) => player.id !== playerToRemove.id,
+      );
       setPlayers(updatedPlayers);
 
       if (roomCode) {
@@ -259,6 +273,9 @@ export default function CreateRoomPage() {
           saveRooms(rooms);
         }
       }
+
+      setShowRemoveConfirm(false);
+      setPlayerToRemove(null);
     }
   };
 
@@ -362,17 +379,15 @@ export default function CreateRoomPage() {
           ← Back to Home
         </Link>
 
-        <h1 className="mb-8 text-4xl font-bold text-white">
-          Create Private Room ^_^
-        </h1>
+        <h1 className="mb-8 text-4xl font-bold text-white">create room</h1>
 
         {!gameStarted ? (
           <div className="mb-8 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-white">Room Setup</h2>
+            <h2 className="mb-4 text-2xl font-bold text-white">room setup</h2>
 
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-white">Your Name:</label>
+                <label className="mb-2 block text-white">your name:</label>
                 <input
                   type="text"
                   value={hostName}
@@ -383,9 +398,7 @@ export default function CreateRoomPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-white">
-                  Number of Rounds:
-                </label>
+                <label className="mb-2 block text-white">rounds:</label>
                 <select
                   value={totalRounds}
                   onChange={(e) => setTotalRounds(Number(e.target.value))}
@@ -400,7 +413,7 @@ export default function CreateRoomPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-white">Game Mode:</label>
+                <label className="mb-2 block text-white">game mode:</label>
                 <select
                   value={gameMode}
                   onChange={(e) => setGameMode(e.target.value)}
@@ -419,7 +432,7 @@ export default function CreateRoomPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-white">Dice Type:</label>
+                <label className="mb-2 block text-white">dice type:</label>
                 <select
                   value={diceType}
                   onChange={(e) => setDiceType(e.target.value)}
@@ -446,17 +459,17 @@ export default function CreateRoomPage() {
                 onClick={generateRoomCode}
                 className="rounded-lg bg-green-600 px-8 py-3 text-white hover:bg-green-700"
               >
-                Generate Room Code
+                generate room code
               </button>
             ) : (
               <div className="space-y-6">
                 <div className="rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-6">
                   <h3 className="mb-4 text-xl font-bold text-white">
-                    Room Created!
+                    room created!
                   </h3>
                   <div className="mb-4">
                     <p className="text-gray-300">
-                      Share this code with your friends:
+                      share this code with your friends:
                     </p>
                     <div className="mt-2 flex items-center justify-center space-x-2">
                       <span className="text-3xl font-bold text-green-300">
@@ -471,14 +484,14 @@ export default function CreateRoomPage() {
                     </div>
                   </div>
                   <p className="text-sm text-gray-400">
-                    Game Settings: {totalRounds} rounds, {gameMode} mode,{" "}
+                    game settings: {totalRounds} rounds, {gameMode} mode,{" "}
                     {diceType} dice
                   </p>
                 </div>
 
                 <div className="rounded-lg bg-white/10 p-4">
-                  <h3 className="mb-4 text-lg font-bold text-white">
-                    Players ({players.length}/6)
+                  <h3 className="mb-2 text-lg font-bold text-white">
+                    players ({players.length}/6)
                   </h3>
                   <div className="space-y-2">
                     {players.map((player) => (
@@ -692,7 +705,7 @@ export default function CreateRoomPage() {
                   disabled={players.length < 2 || !hostName.trim()}
                   className="rounded-lg bg-green-600 px-8 py-3 text-white hover:bg-green-700 disabled:opacity-50"
                 >
-                  Start Game
+                  start game
                 </button>
               </div>
             )}
@@ -871,6 +884,40 @@ export default function CreateRoomPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {showRemoveConfirm && playerToRemove && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="mx-4 max-w-md rounded-lg border-2 border-red-500 bg-black p-6 shadow-xl">
+              <h3 className="mb-4 text-xl font-bold text-white">
+                Remove Player
+              </h3>
+              <p className="mb-6 text-gray-300">
+                Are you sure you want to remove{" "}
+                <span className="font-semibold text-white">
+                  {playerToRemove.name}
+                </span>
+                ?
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => {
+                    setShowRemoveConfirm(false);
+                    setPlayerToRemove(null);
+                  }}
+                  className="flex-1 rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmRemovePlayer}
+                  className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

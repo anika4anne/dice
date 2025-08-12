@@ -328,9 +328,7 @@ export default function JoinRoomPage() {
           ← Back to Home
         </Link>
 
-        <h1 className="mb-8 text-4xl font-bold text-white">
-          Join Private Room ^_^
-        </h1>
+        <h1 className="mb-8 text-4xl font-bold text-white">join room</h1>
 
         {hasBeenRemoved ? (
           <div className="mb-8 text-center">
@@ -363,11 +361,11 @@ export default function JoinRoomPage() {
           </div>
         ) : !hasJoined ? (
           <div className="mb-8 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-white">Join a Game</h2>
+            <h2 className="mb-4 text-2xl font-bold text-white">join a game</h2>
 
             <div className="mb-6 space-y-4">
               <div>
-                <label className="mb-2 block text-white">Room Code:</label>
+                <label className="mb-2 block text-white">room code:</label>
                 <input
                   type="text"
                   value={roomCode}
@@ -382,7 +380,7 @@ export default function JoinRoomPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-white">Your Name:</label>
+                <label className="mb-2 block text-white">your name:</label>
                 <input
                   type="text"
                   value={playerName}
@@ -401,10 +399,10 @@ export default function JoinRoomPage() {
               {isJoining ? (
                 <div className="flex items-center space-x-2">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  <span>Joining...</span>
+                  <span>joining...</span>
                 </div>
               ) : (
-                "Join Room"
+                "join room"
               )}
             </button>
           </div>
@@ -412,13 +410,13 @@ export default function JoinRoomPage() {
           <div className="mb-8 text-center">
             <div className="mb-6 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-6">
               <h3 className="mb-4 text-xl font-bold text-white">
-                🎉 Successfully Joined!
+                🎉 successfully joined!
               </h3>
               <p className="mb-2 text-lg text-green-300">
                 Room Code: {roomCode}
               </p>
               <p className="text-gray-300">
-                Welcome, {playerName}! Waiting for the host to start the game...
+                welcome, {playerName}! waiting for the host to start the game...
               </p>
               <p className="mt-2 text-xs text-green-300"></p>
             </div>
