@@ -364,8 +364,6 @@ export default function JoinRoomPage() {
           </div>
         ) : !hasJoined ? (
           <div className="mb-8 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-white">join a game</h2>
-
             <div className="mb-6 space-y-4">
               <div>
                 <label className="mb-2 block text-white">room code:</label>
@@ -411,7 +409,7 @@ export default function JoinRoomPage() {
           </div>
         ) : !gameStarted ? (
           <div className="mb-8 text-center">
-            <div className="mb-6 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-6">
+            <div className="mb-6 rounded-lg bg-green-900 p-6">
               <h3 className="mb-4 text-xl font-bold text-white">
                 🎉 successfully joined!
               </h3>
@@ -424,7 +422,7 @@ export default function JoinRoomPage() {
               <p className="mt-2 text-xs text-green-300"></p>
             </div>
 
-            <div className="mb-6 rounded-lg bg-white/10 p-4">
+            <div className="mb-6 rounded-lg bg-blue-900 p-4">
               <h3 className="mb-4 text-lg font-bold text-white">
                 Players ({players.length}/6)
               </h3>
@@ -437,16 +435,10 @@ export default function JoinRoomPage() {
                         ? "border border-green-400 bg-green-400/20"
                         : player.id === currentPlayerId
                           ? "border border-orange-400 bg-orange-400/20"
-                          : "bg-white/5"
+                          : "border border-gray-600 bg-white/5"
                     }`}
                   >
-                    <span className="text-lg">
-                      {player.isHost
-                        ? "👑"
-                        : player.id === currentPlayerId
-                          ? "👤"
-                          : "👤"}
-                    </span>
+                    {player.isHost && <span className="text-lg">👑</span>}
                     <span
                       className={`font-medium ${
                         player.isHost
@@ -469,7 +461,7 @@ export default function JoinRoomPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-white/10 p-4">
+            <div className="rounded-lg bg-purple-900 p-4">
               <h3 className="mb-2 text-lg font-bold text-white">
                 Game Settings
               </h3>
@@ -478,16 +470,27 @@ export default function JoinRoomPage() {
               </p>
             </div>
 
-            <div className="flex justify-center">
+            <div className="mt-6 space-y-2">
+              <p className="text-sm text-gray-400">
+                Waiting for host to start the game...
+              </p>
+              <button
+                onClick={leaveRoom}
+                className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
+              >
+                Leave Room
+              </button>
+            </div>
+
+            <div className="mt-6 flex justify-center">
               <button
                 onClick={() => setShowHowToPlay(true)}
-                className="group relative overflow-hidden rounded-2xl bg-white/10 px-8 py-3 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-white/20"
+                className="rounded-2xl bg-teal-600 px-8 py-3 text-white transition-colors hover:bg-teal-700"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                <div className="relative z-10 flex items-center text-white">
+                <div className="flex items-center">
                   <span className="font-semibold">How to Play</span>
                   <svg
-                    className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
+                    className="ml-2 h-5 w-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -500,18 +503,6 @@ export default function JoinRoomPage() {
                     />
                   </svg>
                 </div>
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <p className="text-sm text-gray-400">
-                Waiting for host to start the game...
-              </p>
-              <button
-                onClick={leaveRoom}
-                className="rounded-lg bg-gray-600 px-6 py-2 text-white hover:bg-gray-700"
-              >
-                Leave Room
               </button>
             </div>
           </div>
@@ -562,10 +553,7 @@ export default function JoinRoomPage() {
               </div>
             ) : (
               <>
-                <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
-                  <h2 className="mb-4 text-3xl font-bold text-white">
-                    🎲 Game in Progress!
-                  </h2>
+                <div className="mb-8 rounded-lg bg-blue-900 p-8">
                   <p className="mb-4 text-xl text-green-300">
                     Room Code: {roomCode}
                   </p>
@@ -630,11 +618,11 @@ export default function JoinRoomPage() {
                   </div>
                 </div>
 
-                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mb-8 flex justify-center gap-6">
                   {players.map((player, index) => (
                     <div
                       key={player.id}
-                      className={`rounded-lg p-4 ${
+                      className={`w-52 rounded-lg p-6 ${
                         index === currentPlayerIndex
                           ? "border-2 border-blue-400 bg-blue-400/20"
                           : player.isHost
@@ -645,31 +633,19 @@ export default function JoinRoomPage() {
                       }`}
                     >
                       <div className="text-center">
-                        <div className="mb-2 text-2xl">
+                        <div className="mb-3 text-2xl">
                           {player.isHost ? (
-                            <FontAwesomeIcon
-                              icon={faCrown}
-                              className="text-yellow-400"
-                            />
+                            <span className="text-xl">👑</span>
                           ) : index === currentPlayerIndex ? (
-                            <FontAwesomeIcon
-                              icon={faUser}
-                              className="text-blue-300"
-                            />
+                            <span className="text-xl">👤</span>
                           ) : player.id === currentPlayerId ? (
-                            <FontAwesomeIcon
-                              icon={faUser}
-                              className="text-green-300"
-                            />
+                            <span className="text-xl">👤</span>
                           ) : (
-                            <FontAwesomeIcon
-                              icon={faUser}
-                              className="text-white"
-                            />
+                            <span className="text-xl">👤</span>
                           )}
                         </div>
                         <h3
-                          className={`text-lg font-bold ${
+                          className={`mb-2 text-lg font-bold ${
                             index === currentPlayerIndex
                               ? "text-blue-300"
                               : player.isHost
@@ -681,7 +657,7 @@ export default function JoinRoomPage() {
                         >
                           {player.name}
                         </h3>
-                        <p className="text-xl font-bold text-yellow-300">
+                        <p className="mb-2 text-xl font-bold text-yellow-300">
                           {player.score} pts
                         </p>
                         {index === currentPlayerIndex && (

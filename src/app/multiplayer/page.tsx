@@ -11,11 +11,13 @@ interface Player {
   score: number;
   wins: number;
   isCurrentTurn: boolean;
+  color: string;
 }
 
 export default function MultiplayerPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
+  const [roomCode, setRoomCode] = useState("MULTI");
   const [totalRounds, setTotalRounds] = useState(5);
   const [currentRound, setCurrentRound] = useState(0);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -74,6 +76,17 @@ export default function MultiplayerPage() {
         playerName = `Player ${playerNumber}`;
       }
 
+      // Default colors for players
+      const defaultColors = [
+        "#FCD34D",
+        "#FCD34D",
+        "#FCD34D",
+        "#FCD34D",
+        "#FCD34D",
+        "#FCD34D",
+      ];
+      const playerColor = "#FCD34D";
+
       setPlayers([
         ...players,
         {
@@ -83,6 +96,7 @@ export default function MultiplayerPage() {
           score: 0,
           wins: 0,
           isCurrentTurn: false,
+          color: playerColor,
         },
       ]);
     }
@@ -229,7 +243,6 @@ export default function MultiplayerPage() {
       gravity: 0.8,
     });
 
-    // Additional confetti burst after a short delay
     setTimeout(() => {
       void confetti({
         particleCount: 100,
@@ -268,6 +281,25 @@ export default function MultiplayerPage() {
       pairs: "Pairs",
     };
     return `${descriptions[gameMode as keyof typeof descriptions] || "Score"}: ${score}`;
+  };
+
+  const changePlayerColor = (playerId: number, newColor: string) => {
+    setPlayers(
+      players.map((player) =>
+        player.id === playerId ? { ...player, color: newColor } : player,
+      ),
+    );
+  };
+
+  const getTextColor = (backgroundColor: string) => {
+    const hex = backgroundColor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+
+    return brightness > 128 ? "text-black" : "text-white";
   };
 
   return (
@@ -424,66 +456,101 @@ export default function MultiplayerPage() {
           </div>
         ) : (
           <>
-            <div className="mb-4 text-center">
+            {/* Game Status Box */}
+            <div className="mb-6 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 p-6 text-center">
+              <div className="mb-2 flex items-center justify-center space-x-2">
+                <span className="text-2xl">🎲</span>
+                <h2 className="text-2xl font-bold text-white">
+                  Game in Progress!
+                </h2>
+              </div>
+              <p className="mb-1 text-lg text-blue-200">
+                Room Code: {roomCode || "XXXXXX"}
+              </p>
               <p className="text-white">
-                Round {currentRound + 1} of {totalRounds}
-              </p>
-              <p className="text-sm text-gray-300">
-                Mode: {gameMode} | Dice: {diceType}
+                Round {currentRound + 1} of {totalRounds} • {players.length}{" "}
+                players
               </p>
             </div>
 
-            <div className="mb-6 text-center">
-              <p className="text-xl text-white">
-                Current Turn:{" "}
-                <span className="font-bold text-yellow-300">
-                  {players[currentPlayerIndex]?.name}
-                </span>
-              </p>
+            {/* Current Turn and Dice Section */}
+            <div className="mb-6 rounded-lg bg-gray-800 p-6 text-center">
+              <h3 className="mb-2 text-xl text-white">
+                {players[currentPlayerIndex]?.name}'s Turn
+              </h3>
+              <p className="mb-4 text-white">Rolls left: 3</p>
+              <div className="mx-auto mb-4 grid max-w-xs grid-cols-5 justify-center gap-2">
+                {players[currentPlayerIndex]?.dice.map((value, diceIndex) => (
+                  <div
+                    key={diceIndex}
+                    className="h-12 w-12 rounded bg-white text-center text-sm leading-12 font-bold text-gray-800 shadow"
+                  >
+                    {value}
+                  </div>
+                ))}
+              </div>
+              {!isRolling && players[currentPlayerIndex] && (
+                <button
+                  onClick={rollDice}
+                  className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700"
+                >
+                  Roll Dice
+                </button>
+              )}
             </div>
 
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Player Cards - Smaller and at bottom */}
+            <div className="mb-6 flex justify-center gap-4">
               {players.map((player, index) => (
                 <div
                   key={player.id}
-                  className={`rounded-lg p-4 ${player.isCurrentTurn ? "border-2 border-yellow-400 bg-yellow-400/20" : "bg-white/10"}`}
+                  className={`w-48 rounded-lg p-4 ${player.isCurrentTurn ? "border-2 border-blue-400" : ""}`}
+                  style={{ backgroundColor: player.color }}
                 >
                   <div className="text-center">
+                    <div className="mb-2 flex items-center justify-center">
+                      {player.isCurrentTurn ? (
+                        <span className="text-lg">👑</span>
+                      ) : (
+                        <span className="text-lg">👤</span>
+                      )}
+                    </div>
                     <h3
-                      className={`mb-2 text-lg font-bold ${player.isCurrentTurn ? "text-yellow-300" : "text-white"}`}
+                      className={`text-lg font-bold ${getTextColor(player.color)} mb-1`}
                     >
                       {player.name}
                     </h3>
-                    <p className="mb-2 text-sm text-gray-300">
-                      Wins: {player.wins} | {getScoreDescription(player.score)}
+                    <p className={`text-sm ${getTextColor(player.color)}`}>
+                      {player.score} pts
                     </p>
-                    <div
-                      className={`grid grid-cols-5 gap-1 ${player.isCurrentTurn && isRolling ? "animate-pulse" : ""}`}
-                    >
-                      {player.dice.map((value, diceIndex) => (
-                        <div
-                          key={diceIndex}
-                          className="h-8 w-8 rounded bg-white text-center text-sm leading-8 font-bold text-gray-800 shadow"
-                        >
-                          {value}
-                        </div>
-                      ))}
-                    </div>
+                    {player.isCurrentTurn && (
+                      <p
+                        className={`text-xs ${getTextColor(player.color)} mt-1`}
+                      >
+                        Current Turn
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
+            <div className="mb-6 text-center text-white">
+              <p>
+                Game Settings: {totalRounds} rounds, {gameMode} mode, {diceType}
+              </p>
+            </div>
+
             {roundResults.length > 0 && (
-              <div className="mb-6 rounded-lg bg-white/10 p-4">
-                <h3 className="mb-2 text-lg font-bold text-white">
+              <div className="mb-6 rounded-lg bg-yellow-400 p-4">
+                <h3 className="mb-2 text-lg font-bold text-gray-800">
                   Round Results:
                 </h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {roundResults.map((result, _index) => (
                     <div key={_index} className="flex justify-between">
-                      <span className="text-gray-300">{result.name}:</span>
-                      <span className="font-bold text-white">
+                      <span className="text-gray-800">{result.name}:</span>
+                      <span className="font-bold text-gray-800">
                         {result.score}
                       </span>
                     </div>
@@ -502,15 +569,6 @@ export default function MultiplayerPage() {
                   Round {currentRound} Complete!
                 </p>
               </div>
-            )}
-
-            {!isRolling && players[currentPlayerIndex] && (
-              <button
-                onClick={rollDice}
-                className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700"
-              >
-                Roll Dice
-              </button>
             )}
           </>
         )}

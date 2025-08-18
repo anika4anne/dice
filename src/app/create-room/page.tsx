@@ -14,6 +14,7 @@ interface Player {
   dice: number[];
   isCurrentTurn: boolean;
   rollsLeft: number;
+  color: string;
 }
 
 interface RoomData {
@@ -60,6 +61,7 @@ export default function CreateRoomPage() {
       dice: [1, 1, 1, 1, 1],
       isCurrentTurn: false,
       rollsLeft: 3,
+      color: "#FCD34D", // Default yellow color
     },
   ]);
   const [hostName, setHostName] = useState("");
@@ -78,7 +80,12 @@ export default function CreateRoomPage() {
         const rooms = getRooms();
         const room = rooms.get(roomCode);
         if (room) {
-          setPlayers(room.players);
+          // Ensure all players have colors
+          const playersWithColors = room.players.map((player) => ({
+            ...player,
+            color: player.color || "#FCD34D",
+          }));
+          setPlayers(playersWithColors);
           setTotalRounds(room.totalRounds);
           setGameMode(room.gameMode);
           setDiceType(room.diceType);
@@ -232,6 +239,7 @@ export default function CreateRoomPage() {
           dice: [1, 1, 1, 1, 1],
           isCurrentTurn: false,
           rollsLeft: 3,
+          color: "#FCD34D", // Default yellow color
         },
       ],
       totalRounds,
@@ -298,6 +306,39 @@ export default function CreateRoomPage() {
     }
   };
 
+  const changePlayerColor = (playerId: number, newColor: string) => {
+    const updatedPlayers = players.map((player) =>
+      player.id === playerId ? { ...player, color: newColor } : player,
+    );
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
+  };
+
+  const getTextColor = (backgroundColor: string) => {
+    if (!backgroundColor || typeof backgroundColor !== "string") {
+      return "text-black"; // Default to black text
+    }
+    const hex = backgroundColor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+
+    return brightness > 128 ? "text-black" : "text-white";
+  };
+
   const startGame = async () => {
     if (!hostName.trim()) {
       alert("Please enter your name to start the game!");
@@ -314,6 +355,7 @@ export default function CreateRoomPage() {
       dice: [1, 1, 1, 1, 1],
       isCurrentTurn: index === 0,
       rollsLeft: 3,
+      color: player.color || "#FCD34D", // Ensure color is preserved
     }));
 
     setPlayers(gamePlayers);
@@ -466,7 +508,7 @@ export default function CreateRoomPage() {
               </button>
             ) : (
               <div className="space-y-6">
-                <div className="rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-6">
+                <div className="rounded-lg bg-green-900 p-6">
                   <h3 className="mb-4 text-xl font-bold text-white">
                     room created!
                   </h3>
@@ -760,10 +802,7 @@ export default function CreateRoomPage() {
               </div>
             ) : (
               <>
-                <div className="mb-8 rounded-lg bg-gradient-to-br from-green-900 to-blue-900 p-8">
-                  <h2 className="mb-4 text-3xl font-bold text-white">
-                    🎲 Game in Progress!
-                  </h2>
+                <div className="mb-8 rounded-lg bg-blue-900 p-8">
                   <p className="mb-4 text-xl text-green-300">
                     Room Code: {roomCode}
                   </p>
@@ -792,26 +831,34 @@ export default function CreateRoomPage() {
                     )) ?? null}
                   </div>
 
-                  <div className="flex justify-center space-x-4">
-                    {players[currentPlayerIndex]?.id === 1 &&
-                      (players[currentPlayerIndex]?.rollsLeft ?? 0) > 0 && (
-                        <button
-                          onClick={rollDice}
-                          className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
-                        >
-                          Roll Dice
-                        </button>
-                      )}
-                    {players[currentPlayerIndex]?.id === 1 &&
-                      (players[currentPlayerIndex]?.rollsLeft ?? 0) < 3 && (
-                        <button
-                          onClick={endTurn}
-                          className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700"
-                        >
-                          End Turn
-                        </button>
-                      )}
-                    {players[currentPlayerIndex]?.id !== 1 && (
+                  <div className="text-center">
+                    {players[currentPlayerIndex]?.id === 1 ? (
+                      <div className="space-y-4">
+                        <p className="text-lg font-bold text-green-300">
+                          It&apos;s your turn!
+                        </p>
+                        <div className="flex justify-center space-x-4">
+                          {(players[currentPlayerIndex]?.rollsLeft ?? 0) >
+                            0 && (
+                            <button
+                              onClick={rollDice}
+                              className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+                            >
+                              Roll Dice
+                            </button>
+                          )}
+                          {(players[currentPlayerIndex]?.rollsLeft ?? 0) <
+                            3 && (
+                            <button
+                              onClick={endTurn}
+                              className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-blue-700"
+                            >
+                              End Turn
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
                       <p className="text-lg font-bold text-blue-300">
                         Waiting for {players[currentPlayerIndex]?.name} to
                         play...
@@ -820,11 +867,11 @@ export default function CreateRoomPage() {
                   </div>
                 </div>
 
-                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mb-8 flex justify-center gap-6">
                   {players.map((player, index) => (
                     <div
                       key={player.id}
-                      className={`rounded-lg p-4 ${
+                      className={`w-52 rounded-lg p-6 ${
                         index === currentPlayerIndex
                           ? "border-2 border-blue-400 bg-blue-400/20"
                           : player.isHost
@@ -833,26 +880,15 @@ export default function CreateRoomPage() {
                       }`}
                     >
                       <div className="text-center">
-                        <div className="mb-2 text-2xl">
+                        <div className="mb-3 text-2xl">
                           {player.isHost ? (
-                            <FontAwesomeIcon
-                              icon={faCrown}
-                              className="text-yellow-400"
-                            />
-                          ) : index === currentPlayerIndex ? (
-                            <FontAwesomeIcon
-                              icon={faUser}
-                              className="text-blue-300"
-                            />
+                            <span className="text-xl">👑</span>
                           ) : (
-                            <FontAwesomeIcon
-                              icon={faUser}
-                              className="text-white"
-                            />
+                            <span className="text-xl">👤</span>
                           )}
                         </div>
                         <h3
-                          className={`text-lg font-bold ${
+                          className={`mb-2 text-lg font-bold ${
                             index === currentPlayerIndex
                               ? "text-blue-300"
                               : player.isHost
@@ -862,7 +898,7 @@ export default function CreateRoomPage() {
                         >
                           {player.name}
                         </h3>
-                        <p className="text-xl font-bold text-yellow-300">
+                        <p className="mb-2 text-xl font-bold text-yellow-300">
                           {player.score} pts
                         </p>
                         {index === currentPlayerIndex && (
