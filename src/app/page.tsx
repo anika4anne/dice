@@ -33,13 +33,9 @@ export default function HomePage() {
 
         <div className="space-y-8">
           <div className="grid w-full max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
-            <Link
-              href="/single-player"
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 p-6 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-purple-700 hover:to-pink-700"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 to-pink-400/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-              <div className="relative z-10">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+            <Link href="/single-player" className="rounded-xl bg-blue-900 p-6">
+              <div>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-black">
                   <FontAwesomeIcon
                     icon={faUser}
                     className="h-8 w-8 text-white"
@@ -51,7 +47,7 @@ export default function HomePage() {
                 <p className="mb-4 text-gray-300">
                   wanna play against a robot? good for practice
                 </p>
-                <div className="flex items-center text-purple-300 transition-transform duration-300 group-hover:translate-x-2">
+                <div className="flex items-center text-white">
                   <span className="font-semibold">lets play</span>
                   <svg
                     className="ml-2 h-5 w-5"
@@ -70,13 +66,9 @@ export default function HomePage() {
               </div>
             </Link>
 
-            <Link
-              href="/multiplayer"
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-600 to-indigo-600 p-6 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-pink-700 hover:to-indigo-700"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-400/30 to-indigo-400/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-              <div className="relative z-10">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+            <Link href="/multiplayer" className="rounded-xl bg-blue-900 p-6">
+              <div>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-black">
                   <FontAwesomeIcon
                     icon={faUsers}
                     className="h-8 w-8 text-white"
@@ -88,7 +80,7 @@ export default function HomePage() {
                 <p className="mb-4 text-gray-300">
                   get your friends! up to 6 players can join
                 </p>
-                <div className="flex items-center text-pink-300 transition-transform duration-300 group-hover:translate-x-2">
+                <div className="flex items-center text-white">
                   <span className="font-semibold">lets play</span>
                   <svg
                     className="ml-2 h-5 w-5"
@@ -109,15 +101,11 @@ export default function HomePage() {
           </div>
 
           <div className="grid w-full max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
-            <Link
-              href="/create-room"
-              className="group relative overflow-hidden rounded-xl bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-102 hover:bg-white/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-blue-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-              <div className="relative z-10">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-green-500/20">
+            <Link href="/create-room" className="rounded-xl bg-blue-900 p-6">
+              <div>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-black">
                   <svg
-                    className="h-8 w-8 text-green-300"
+                    className="h-8 w-8 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -136,7 +124,7 @@ export default function HomePage() {
                 <p className="mb-4 text-gray-300">
                   make a private room and invite friends
                 </p>
-                <div className="flex items-center text-green-300 transition-transform duration-300 group-hover:translate-x-2">
+                <div className="flex items-center text-white">
                   <span className="font-semibold">create room</span>
                   <svg
                     className="ml-2 h-5 w-5"
@@ -155,15 +143,11 @@ export default function HomePage() {
               </div>
             </Link>
 
-            <Link
-              href="/join-room"
-              className="group relative overflow-hidden rounded-xl bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-102 hover:bg-white/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-              <div className="relative z-10">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-orange-500/20">
+            <Link href="/join-room" className="rounded-xl bg-blue-900 p-6">
+              <div>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-black">
                   <svg
-                    className="h-8 w-8 text-orange-300"
+                    className="h-8 w-8 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -182,7 +166,7 @@ export default function HomePage() {
                 <p className="mb-4 text-gray-300">
                   join a friends room with their code
                 </p>
-                <div className="flex items-center text-orange-300 transition-transform duration-300 group-hover:translate-x-2">
+                <div className="flex items-center text-white">
                   <span className="font-semibold">join room</span>
                   <svg
                     className="ml-2 h-5 w-5"
@@ -205,10 +189,9 @@ export default function HomePage() {
           <div className="flex justify-center">
             <button
               onClick={() => setShowHowToPlay(true)}
-              className="group relative overflow-hidden rounded-xl bg-white/10 px-8 py-3 backdrop-blur-sm transition-all duration-300 hover:scale-102 hover:bg-white/20"
+              className="rounded-xl bg-green-600 px-8 py-3"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-              <div className="relative z-10 flex items-center text-white">
+              <div className="flex items-center text-white">
                 <span className="font-semibold">how to play</span>
                 <svg
                   className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
@@ -232,9 +215,7 @@ export default function HomePage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="mx-4 max-w-2xl rounded-lg bg-black p-6 shadow-xl">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">
-                  how to play
-                </h3>
+                <h3 className="text-xl font-bold text-white">how to play</h3>
                 <button
                   onClick={() => setShowHowToPlay(false)}
                   className="rounded-full bg-gray-600 p-1 text-white hover:bg-gray-500"
@@ -250,8 +231,12 @@ export default function HomePage() {
                   <div className="ml-4 space-y-1">
                     <p>• you get 3 rolls per turn (use them wisely!)</p>
                     <p>• roll to try and get better scores</p>
-                    <p>• end your turn when you&apos;re happy with what you got</p>
-                    <p>• play a few rounds and whoever has the most points wins!</p>
+                    <p>
+                      • end your turn when you&apos;re happy with what you got
+                    </p>
+                    <p>
+                      • play a few rounds and whoever has the most points wins!
+                    </p>
                   </div>
                 </div>
 
@@ -261,12 +246,19 @@ export default function HomePage() {
                   </p>
                   <div className="ml-4 space-y-2">
                     <div className="border-l-2 border-blue-400 pl-3">
-                      <p className="font-semibold text-blue-200">classic (sum):</p>
-                      <p>just add up all your dice! like 3+4+1+6+2 = 16 points</p>
+                      <p className="font-semibold text-blue-200">
+                        classic (sum):
+                      </p>
+                      <p>
+                        just add up all your dice! like 3+4+1+6+2 = 16 points
+                      </p>
                     </div>
                     <div className="border-l-2 border-purple-400 pl-3">
                       <p className="font-semibold text-purple-200">multiply:</p>
-                      <p>multiply everything together! 3×4×1×6×2 = 144 points (watch out for 1s!)</p>
+                      <p>
+                        multiply everything together! 3×4×1×6×2 = 144 points
+                        (watch out for 1s!)
+                      </p>
                     </div>
                     <div className="border-l-2 border-green-400 pl-3">
                       <p className="font-semibold text-green-200">highest:</p>
@@ -278,7 +270,10 @@ export default function HomePage() {
                     </div>
                     <div className="border-l-2 border-red-400 pl-3">
                       <p className="font-semibold text-red-200">pairs:</p>
-                      <p>get 10 points for each pair! two 3s = 10 points, three 3s = 20 points</p>
+                      <p>
+                        get 10 points for each pair! two 3s = 10 points, three
+                        3s = 20 points
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -289,12 +284,19 @@ export default function HomePage() {
                   </p>
                   <div className="ml-4 space-y-2">
                     <div className="border-l-2 border-purple-400 pl-3">
-                      <p className="font-semibold text-purple-200">solo mode:</p>
+                      <p className="font-semibold text-purple-200">
+                        solo mode:
+                      </p>
                       <p>play against a robot! good for learning</p>
                     </div>
                     <div className="border-l-2 border-pink-400 pl-3">
-                      <p className="font-semibold text-pink-200">multiplayer:</p>
-                      <p>get your friends! up to 6 players, create rooms or join existing ones</p>
+                      <p className="font-semibold text-pink-200">
+                        multiplayer:
+                      </p>
+                      <p>
+                        get your friends! up to 6 players, create rooms or join
+                        existing ones
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -318,7 +320,10 @@ export default function HomePage() {
                     <p>• classic mode: just go for high numbers</p>
                     <p>• multiply mode: 1s are your enemy! try to avoid them</p>
                     <p>• pairs mode: matching numbers are your friend</p>
-                    <p>• don&apos;t waste all 3 rolls if you already got something good!</p>
+                    <p>
+                      • don&apos;t waste all 3 rolls if you already got
+                      something good!
+                    </p>
                   </div>
                 </div>
               </div>
