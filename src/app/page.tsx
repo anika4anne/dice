@@ -35,14 +35,14 @@ export default function HomePage() {
           <div className="grid w-full max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
             <Link
               href="/single-player"
-              className="group relative overflow-hidden rounded-xl bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-102 hover:bg-white/20"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 p-6 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-purple-700 hover:to-pink-700"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 to-pink-400/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
               <div className="relative z-10">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-purple-500/20">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
                   <FontAwesomeIcon
                     icon={faUser}
-                    className="h-8 w-8 text-purple-300"
+                    className="h-8 w-8 text-white"
                   />
                 </div>
                 <h3 className="mb-3 text-2xl font-bold text-white">
@@ -72,14 +72,14 @@ export default function HomePage() {
 
             <Link
               href="/multiplayer"
-              className="group relative overflow-hidden rounded-xl bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-102 hover:bg-white/20"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-600 to-indigo-600 p-6 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-pink-700 hover:to-indigo-700"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-indigo-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-pink-400/30 to-indigo-400/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
               <div className="relative z-10">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-pink-500/20">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
                   <FontAwesomeIcon
                     icon={faUsers}
-                    className="h-8 w-8 text-pink-300"
+                    className="h-8 w-8 text-white"
                   />
                 </div>
                 <h3 className="mb-3 text-2xl font-bold text-white">
