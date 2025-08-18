@@ -326,10 +326,9 @@ export default function JoinRoomPage() {
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <Link
           href="/"
-          className="group relative mb-8 inline-flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl"
+          className="mb-8 inline-flex items-center gap-2 rounded-lg bg-blue-900 px-6 py-3 text-white"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-          <span className="relative z-10 font-semibold">← Back to Home</span>
+          <span className="font-semibold">← Back to Home</span>
         </Link>
 
         <h1 className="mb-8 text-4xl font-bold text-white">join room</h1>
