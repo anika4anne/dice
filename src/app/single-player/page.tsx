@@ -51,11 +51,33 @@ export default function SinglePlayerPage() {
   }, [isRolling]);
 
   const triggerConfetti = () => {
+    // Spectacular confetti for game winner
     void confetti({
-      particleCount: 100,
-      spread: 70,
+      particleCount: 150,
+      spread: 90,
       origin: { y: 0.6 },
+      colors: [
+        "#FFD700",
+        "#FFA500",
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#96CEB4",
+        "#FFEAA7",
+      ],
+      startVelocity: 30,
+      gravity: 0.8,
     });
+
+    setTimeout(() => {
+      void confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.4 },
+        colors: ["#FFD700", "#FFA500", "#FF6B6B"],
+        startVelocity: 25,
+      });
+    }, 500);
   };
 
   const getDiceMax = () => {
@@ -117,6 +139,16 @@ export default function SinglePlayerPage() {
 
     setWinner(roundWinner);
     setCurrentRound((prev) => prev + 1);
+
+    if (playerTotal !== robotTotal) {
+      void confetti({
+        particleCount: 30,
+        spread: 40,
+        origin: { y: 0.6 },
+        colors: ["#FFD700", "#FFA500", "#4ECDC4"],
+        startVelocity: 20,
+      });
+    }
 
     const newHighestScore = Math.max(
       playerTotal,

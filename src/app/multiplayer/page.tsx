@@ -165,6 +165,15 @@ export default function MultiplayerPage() {
     setRoundWinner(
       `${roundWinner.name} wins this round with ${roundWinner.score}!`,
     );
+
+    // Trigger confetti for round winner
+    void confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ["#FFD700", "#FFA500", "#FF6B6B", "#4ECDC4", "#45B7D1"],
+    });
+
     setPlayers(
       players.map((player) =>
         player.name === roundWinner.name
@@ -187,7 +196,7 @@ export default function MultiplayerPage() {
             isCurrentTurn: index === 0,
           })),
         );
-      }, 2000);
+      }, 3000); // Increased delay to show confetti longer
     }
   };
 
@@ -201,7 +210,35 @@ export default function MultiplayerPage() {
     }));
     setFinalResults(results);
     setShowLeaderboard(true);
-    void confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+    // Spectacular confetti for game winner
+    void confetti({
+      particleCount: 150,
+      spread: 90,
+      origin: { y: 0.6 },
+      colors: [
+        "#FFD700",
+        "#FFA500",
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#96CEB4",
+        "#FFEAA7",
+      ],
+      startVelocity: 30,
+      gravity: 0.8,
+    });
+
+    // Additional confetti burst after a short delay
+    setTimeout(() => {
+      void confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.4 },
+        colors: ["#FFD700", "#FFA500", "#FF6B6B"],
+        startVelocity: 25,
+      });
+    }, 500);
   };
 
   const resetGame = () => {
@@ -456,9 +493,13 @@ export default function MultiplayerPage() {
             )}
 
             {roundWinner && (
-              <div className="mb-6 text-center">
+              <div className="mb-6 rounded-lg border-2 border-yellow-400 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 p-6 text-center">
+                <div className="mb-2 text-4xl">🏆</div>
                 <p className="text-2xl font-bold text-yellow-300">
                   {roundWinner}
+                </p>
+                <p className="mt-2 text-sm text-yellow-200">
+                  Round {currentRound} Complete!
                 </p>
               </div>
             )}
@@ -476,22 +517,25 @@ export default function MultiplayerPage() {
 
         {showLeaderboard && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-teal-900 to-emerald-700 p-8 shadow-2xl">
-              <h2 className="mb-6 text-center text-3xl font-bold text-white">
-                🏆 Game Results 🏆
-              </h2>
+            <div className="w-full max-w-md rounded-2xl bg-black p-8 shadow-2xl">
+              <div className="mb-6 text-center">
+                <h2 className="mb-2 text-3xl font-bold text-white">
+                  🏆 Game Complete! 🏆
+                </h2>
+                <p className="text-blue-200">Congratulations to all players!</p>
+              </div>
               <div className="mb-6 space-y-4">
                 {finalResults.map((player, index) => (
                   <div
                     key={player.name}
-                    className={`flex items-center justify-between rounded-lg p-4 ${player.isWinner ? "border-2 border-yellow-400 bg-gradient-to-r from-yellow-400/20 to-orange-400/20" : "bg-white/10"}`}
+                    className={`flex items-center justify-between rounded-lg p-4 ${player.isWinner ? "border-2 border-yellow-400 bg-yellow-400/20 shadow-lg" : "bg-white/10"}`}
                   >
                     <div className="flex items-center space-x-3">
                       <div
                         className={`text-2xl ${player.isWinner ? "text-yellow-400" : "text-gray-400"}`}
                       >
                         {index === 0
-                          ? "🥇"
+                          ? "👑"
                           : index === 1
                             ? "🥈"
                             : index === 2
@@ -507,6 +551,11 @@ export default function MultiplayerPage() {
                         <div className="text-sm text-gray-300">
                           {player.wins} wins
                         </div>
+                        {player.isWinner && (
+                          <div className="mt-1 text-xs font-semibold text-yellow-200">
+                            🎊 CHAMPION! 🎊
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
