@@ -14,6 +14,7 @@ interface Player {
   dice: number[];
   isCurrentTurn: boolean;
   rollsLeft: number;
+  color?: string;
 }
 
 interface RoomData {
@@ -80,6 +81,11 @@ export default function JoinRoomPage() {
   const [roundScores, setRoundScores] = useState<Record<number, number>[]>([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [hasBeenRemoved, setHasBeenRemoved] = useState(false);
+  const [showJoinSuccess, setShowJoinSuccess] = useState(false);
+  const [joinNotification, setJoinNotification] = useState<{
+    name: string;
+    visible: boolean;
+  }>({ name: "", visible: false });
 
   useEffect(() => {
     if (roomCode && hasJoined) {
@@ -96,6 +102,17 @@ export default function JoinRoomPage() {
             return;
           }
 
+          // Check if a new player joined
+          if (room.players.length > players.length) {
+            const newPlayer = room.players.find(
+              (p) => !players.some((existing) => existing.id === p.id),
+            );
+            if (newPlayer) {
+              console.log("New player detected:", newPlayer.name);
+              showJoinNotification(newPlayer.name);
+            }
+          }
+
           setPlayers(room.players);
           setTotalRounds(room.totalRounds);
           setGameMode(room.gameMode);
@@ -109,7 +126,7 @@ export default function JoinRoomPage() {
 
       return () => clearInterval(interval);
     }
-  }, [roomCode, hasJoined, currentPlayerId]);
+  }, [roomCode, hasJoined, currentPlayerId, players.length]);
 
   const joinRoom = () => {
     if (!roomCode.trim()) {
@@ -170,6 +187,9 @@ export default function JoinRoomPage() {
       setIsJoining(false);
       setHasJoined(true);
       setHasBeenRemoved(false);
+
+      // Show join notification for the new player
+      showJoinNotification(playerName);
     }, 1500);
   };
 
@@ -237,6 +257,19 @@ export default function JoinRoomPage() {
         saveRooms(rooms);
       }
     }
+  };
+
+  const changePlayerColor = (playerId: number, color: string) => {
+    setPlayers(players.map((p) => (p.id === playerId ? { ...p, color } : p)));
+  };
+
+  const showJoinNotification = (playerName: string) => {
+    console.log("Showing join notification for:", playerName);
+    setJoinNotification({ name: playerName, visible: true });
+    setTimeout(() => {
+      console.log("Hiding join notification");
+      setJoinNotification({ name: "", visible: false });
+    }, 3000);
   };
 
   const calculateScore = (dice: number[]) => {
@@ -624,35 +657,40 @@ export default function JoinRoomPage() {
                       key={player.id}
                       className={`w-52 rounded-lg p-6 ${
                         index === currentPlayerIndex
-                          ? "border-2 border-blue-400 bg-blue-400/20"
-                          : player.isHost
-                            ? "border-2 border-green-400 bg-green-400/20"
-                            : player.id === currentPlayerId
-                              ? "border-2 border-green-400 bg-green-400/20"
-                              : "bg-white/10"
+                          ? "border-2 border-blue-400"
+                          : "border-2 border-blue-300"
                       }`}
+                      style={{
+                        backgroundColor: player.color
+                          ? `${player.color}20`
+                          : "#3B82F620",
+                        borderColor: player.color || "#3B82F6",
+                      }}
                     >
                       <div className="text-center">
-                        <div className="mb-3 text-2xl">
-                          {player.isHost ? (
-                            <span className="text-xl">👑</span>
-                          ) : index === currentPlayerIndex ? (
-                            <span className="text-xl">👤</span>
-                          ) : player.id === currentPlayerId ? (
-                            <span className="text-xl">👤</span>
-                          ) : (
-                            <span className="text-xl">👤</span>
-                          )}
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="text-2xl">
+                            {player.isHost ? (
+                              <span className="text-xl">👑</span>
+                            ) : (
+                              <span className="text-xl">👤</span>
+                            )}
+                          </div>
+                          <input
+                            type="color"
+                            value={player.color || "#3B82F6"}
+                            onChange={(e) =>
+                              changePlayerColor(player.id, e.target.value)
+                            }
+                            className="h-6 w-6 cursor-pointer rounded border-2 border-white"
+                            title={`Change ${player.name}'s color`}
+                          />
                         </div>
                         <h3
                           className={`mb-2 text-lg font-bold ${
                             index === currentPlayerIndex
                               ? "text-blue-300"
-                              : player.isHost
-                                ? "text-green-300"
-                                : player.id === currentPlayerId
-                                  ? "text-green-300"
-                                  : "text-white"
+                              : "text-blue-200"
                           }`}
                         >
                           {player.name}
@@ -664,7 +702,7 @@ export default function JoinRoomPage() {
                           <p className="text-sm text-blue-300">Current Turn</p>
                         )}
                         {player.id === currentPlayerId && (
-                          <p className="text-sm text-green-300">You</p>
+                          <p className="text-sm text-blue-200">You</p>
                         )}
                       </div>
                     </div>
@@ -805,6 +843,20 @@ export default function JoinRoomPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Join Notification */}
+        {joinNotification.visible && (
+          <div className="animate-slide-in-right fixed top-4 right-4 z-50">
+            <div className="rounded-lg bg-green-600 p-4 shadow-lg">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🎉</span>
+                <p className="font-medium text-white">
+                  {joinNotification.name} has joined the room!
+                </p>
               </div>
             </div>
           </div>

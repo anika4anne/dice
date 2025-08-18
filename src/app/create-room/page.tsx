@@ -73,6 +73,10 @@ export default function CreateRoomPage() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
+  const [joinNotification, setJoinNotification] = useState<{
+    name: string;
+    visible: boolean;
+  }>({ name: "", visible: false });
 
   useEffect(() => {
     if (roomCode && showRoomInfo) {
@@ -80,6 +84,17 @@ export default function CreateRoomPage() {
         const rooms = getRooms();
         const room = rooms.get(roomCode);
         if (room) {
+          // Check if a new player joined
+          if (room.players.length > players.length) {
+            const newPlayer = room.players.find(
+              (p) => !players.some((existing) => existing.id === p.id),
+            );
+            if (newPlayer) {
+              console.log("New player detected:", newPlayer.name);
+              showJoinNotification(newPlayer.name);
+            }
+          }
+
           // Ensure all players have colors
           const playersWithColors = room.players.map((player) => ({
             ...player,
@@ -323,6 +338,15 @@ export default function CreateRoomPage() {
         saveRooms(rooms);
       }
     }
+  };
+
+  const showJoinNotification = (playerName: string) => {
+    console.log("Showing join notification for:", playerName);
+    setJoinNotification({ name: playerName, visible: true });
+    setTimeout(() => {
+      console.log("Hiding join notification");
+      setJoinNotification({ name: "", visible: false });
+    }, 3000);
   };
 
   const getTextColor = (backgroundColor: string) => {
@@ -873,27 +897,40 @@ export default function CreateRoomPage() {
                       key={player.id}
                       className={`w-52 rounded-lg p-6 ${
                         index === currentPlayerIndex
-                          ? "border-2 border-blue-400 bg-blue-400/20"
-                          : player.isHost
-                            ? "border-2 border-green-400 bg-green-400/20"
-                            : "bg-white/10"
+                          ? "border-2 border-blue-400"
+                          : "border-2 border-blue-300"
                       }`}
+                      style={{
+                        backgroundColor: player.color
+                          ? `${player.color}20`
+                          : "#3B82F620",
+                        borderColor: player.color || "#3B82F6",
+                      }}
                     >
                       <div className="text-center">
-                        <div className="mb-3 text-2xl">
-                          {player.isHost ? (
-                            <span className="text-xl">👑</span>
-                          ) : (
-                            <span className="text-xl">👤</span>
-                          )}
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="text-2xl">
+                            {player.isHost ? (
+                              <span className="text-xl">👑</span>
+                            ) : (
+                              <span className="text-xl">👤</span>
+                            )}
+                          </div>
+                          <input
+                            type="color"
+                            value={player.color || "#3B82F6"}
+                            onChange={(e) =>
+                              changePlayerColor(player.id, e.target.value)
+                            }
+                            className="h-6 w-6 cursor-pointer rounded border-2 border-white"
+                            title={`Change ${player.name}'s color`}
+                          />
                         </div>
                         <h3
                           className={`mb-2 text-lg font-bold ${
                             index === currentPlayerIndex
                               ? "text-blue-300"
-                              : player.isHost
-                                ? "text-green-300"
-                                : "text-white"
+                              : "text-blue-200"
                           }`}
                         >
                           {player.name}
@@ -923,6 +960,20 @@ export default function CreateRoomPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Join Notification */}
+        {joinNotification.visible && (
+          <div className="animate-slide-in-right fixed top-4 right-4 z-50">
+            <div className="rounded-lg bg-green-600 p-4 shadow-lg">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🎉</span>
+                <p className="font-medium text-white">
+                  {joinNotification.name} has joined the room!
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
