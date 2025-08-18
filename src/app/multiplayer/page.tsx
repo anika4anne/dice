@@ -76,7 +76,6 @@ export default function MultiplayerPage() {
         playerName = `Player ${playerNumber}`;
       }
 
-      // Default colors for players
       const defaultColors = [
         "#FCD34D",
         "#FCD34D",
