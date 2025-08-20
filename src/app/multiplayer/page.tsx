@@ -17,7 +17,7 @@ interface Player {
 export default function MultiplayerPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
-  const [roomCode, setRoomCode] = useState("MULTI");
+  const [roomCode] = useState("MULTI");
   const [totalRounds, setTotalRounds] = useState(5);
   const [currentRound, setCurrentRound] = useState(0);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -76,14 +76,6 @@ export default function MultiplayerPage() {
         playerName = `Player ${playerNumber}`;
       }
 
-      const defaultColors = [
-        "#FCD34D",
-        "#FCD34D",
-        "#FCD34D",
-        "#FCD34D",
-        "#FCD34D",
-        "#FCD34D",
-      ];
       const playerColor = "#FCD34D";
 
       setPlayers([
@@ -271,25 +263,6 @@ export default function MultiplayerPage() {
     );
   };
 
-  const getScoreDescription = (score: number) => {
-    const descriptions = {
-      sum: "Sum",
-      multiply: "Product",
-      highest: "Highest",
-      lowest: "Lowest",
-      pairs: "Pairs",
-    };
-    return `${descriptions[gameMode as keyof typeof descriptions] || "Score"}: ${score}`;
-  };
-
-  const changePlayerColor = (playerId: number, newColor: string) => {
-    setPlayers(
-      players.map((player) =>
-        player.id === playerId ? { ...player, color: newColor } : player,
-      ),
-    );
-  };
-
   const getTextColor = (backgroundColor: string) => {
     const hex = backgroundColor.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
@@ -321,7 +294,6 @@ export default function MultiplayerPage() {
         <h1 className="mb-8 text-4xl font-bold text-white">
           Multiplayer Dice Game
         </h1>
-
         {!gameStarted ? (
           <div className="mb-8 text-center">
             <h2 className="mb-4 text-2xl font-bold text-white">Game Setup</h2>
@@ -475,7 +447,7 @@ export default function MultiplayerPage() {
             {/* Current Turn and Dice Section */}
             <div className="mb-6 rounded-lg bg-gray-800 p-6 text-center">
               <h3 className="mb-2 text-xl text-white">
-                {players[currentPlayerIndex]?.name}'s Turn
+                {players[currentPlayerIndex]?.name}&apos;s Turn
               </h3>
               <p className="mb-4 text-white">Rolls left: 3</p>
               <div className="mx-auto mb-4 grid max-w-xs grid-cols-5 justify-center gap-2">
@@ -500,7 +472,7 @@ export default function MultiplayerPage() {
 
             {/* Player Cards - Smaller and at bottom */}
             <div className="mb-6 flex justify-center gap-4">
-              {players.map((player, index) => (
+              {players.map((player) => (
                 <div
                   key={player.id}
                   className={`w-48 rounded-lg p-4 ${player.isCurrentTurn ? "border-2 border-blue-400" : ""}`}
@@ -571,7 +543,7 @@ export default function MultiplayerPage() {
             )}
           </>
         )}
-
+        pnpm
         {showLeaderboard && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-2xl bg-black p-8 shadow-2xl">

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faCrown } from "@fortawesome/free-solid-svg-icons";
+
 
 interface Player {
   id: number;
@@ -81,7 +80,7 @@ export default function JoinRoomPage() {
   const [roundScores, setRoundScores] = useState<Record<number, number>[]>([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [hasBeenRemoved, setHasBeenRemoved] = useState(false);
-  const [showJoinSuccess, setShowJoinSuccess] = useState(false);
+
   const [joinNotification, setJoinNotification] = useState<{
     name: string;
     visible: boolean;
@@ -126,7 +125,7 @@ export default function JoinRoomPage() {
 
       return () => clearInterval(interval);
     }
-  }, [roomCode, hasJoined, currentPlayerId, players.length]);
+  }, [roomCode, hasJoined, currentPlayerId, players]);
 
   const joinRoom = () => {
     if (!roomCode.trim()) {
@@ -664,7 +663,7 @@ export default function JoinRoomPage() {
                         backgroundColor: player.color
                           ? `${player.color}20`
                           : "#3B82F620",
-                        borderColor: player.color || "#3B82F6",
+                        borderColor: player.color ?? "#3B82F6",
                       }}
                     >
                       <div className="text-center">
@@ -678,7 +677,7 @@ export default function JoinRoomPage() {
                           </div>
                           <input
                             type="color"
-                            value={player.color || "#3B82F6"}
+                            value={player.color ?? "#3B82F6"}
                             onChange={(e) =>
                               changePlayerColor(player.id, e.target.value)
                             }

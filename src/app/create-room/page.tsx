@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faCrown } from "@fortawesome/free-solid-svg-icons";
+
 
 interface Player {
   id: number;
@@ -113,7 +112,7 @@ export default function CreateRoomPage() {
 
       return () => clearInterval(interval);
     }
-  }, [roomCode, showRoomInfo, players.length]);
+  }, [roomCode, showRoomInfo, players]);
 
   const getDiceMax = () => {
     const maxMap = {
@@ -349,19 +348,7 @@ export default function CreateRoomPage() {
     }, 3000);
   };
 
-  const getTextColor = (backgroundColor: string) => {
-    if (!backgroundColor || typeof backgroundColor !== "string") {
-      return "text-black"; // Default to black text
-    }
-    const hex = backgroundColor.replace("#", "");
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
 
-    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
-
-    return brightness > 128 ? "text-black" : "text-white";
-  };
 
   const startGame = async () => {
     if (!hostName.trim()) {
