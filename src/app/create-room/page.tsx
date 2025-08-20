@@ -13,6 +13,7 @@ interface Player {
   isCurrentTurn: boolean;
   rollsLeft: number;
   color: string;
+  icon?: string;
 }
 
 interface RoomData {
@@ -79,6 +80,24 @@ export default function CreateRoomPage() {
     name: string;
     visible: boolean;
   }>({ name: "", visible: false });
+
+  const availableIcons = [
+    "👤",
+    "😊",
+    "😎",
+    "🤖",
+    "👾",
+    "🦸",
+    "🧙",
+    "🐙",
+    "🦄",
+    "🐉",
+    "⚡",
+    "🔥",
+    "💎",
+    "🎯",
+    "🚀",
+  ];
 
   useEffect(() => {
     if (roomCode && showRoomInfo) {
@@ -350,6 +369,25 @@ export default function CreateRoomPage() {
     }
   };
 
+  const changePlayerIcon = (playerId: number, newIcon: string) => {
+    const updatedPlayers = players.map((player) =>
+      player.id === playerId ? { ...player, icon: newIcon } : player,
+    );
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
+  };
+
   const showJoinNotification = (playerName: string) => {
     console.log("Showing join notification for:", playerName);
     setJoinNotification({ name: playerName, visible: true });
@@ -366,6 +404,16 @@ export default function CreateRoomPage() {
       console.log("Hiding leave notification");
       setLeaveNotification({ name: "", visible: false });
     }, 3000);
+  };
+
+  const getTextColor = (backgroundColor: string) => {
+    if (!backgroundColor) return "text-white";
+    const hex = backgroundColor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+    return brightness > 128 ? "text-black" : "text-white";
   };
 
   const startGame = async () => {
@@ -577,7 +625,7 @@ export default function CreateRoomPage() {
                           <span
                             className={`text-sm ${player.isHost ? "text-green-300" : "text-white"}`}
                           >
-                            {player.isHost ? "👑" : "👤"}
+                            {player.isHost ? "👑" : (player.icon ?? "👤")}
                           </span>
                           <input
                             type="text"
@@ -588,6 +636,11 @@ export default function CreateRoomPage() {
                             className="rounded border border-gray-600 bg-gray-700 px-2 py-1 text-white"
                             placeholder="Player name"
                           />
+                          {player.isHost ? (
+                            <span className="ml-2 text-xs text-gray-400">
+                              Host can't change icon
+                            </span>
+                          ) : null}
                         </div>
                         {!player.isHost && (
                           <button
@@ -906,9 +959,7 @@ export default function CreateRoomPage() {
                           : "border-2 border-blue-300"
                       }`}
                       style={{
-                        backgroundColor: player.color
-                          ? `${player.color}20`
-                          : "#3B82F620",
+                        backgroundColor: player.color || "#3B82F6",
                         borderColor: player.color || "#3B82F6",
                       }}
                     >
@@ -918,33 +969,42 @@ export default function CreateRoomPage() {
                             {player.isHost ? (
                               <span className="text-xl">👑</span>
                             ) : (
-                              <span className="text-xl">👤</span>
+                              <span className="text-xl">
+                                {player.icon ?? "👤"}
+                              </span>
                             )}
                           </div>
-                          <input
-                            type="color"
-                            value={player.color || "#3B82F6"}
-                            onChange={(e) =>
-                              changePlayerColor(player.id, e.target.value)
-                            }
-                            className="h-6 w-6 cursor-pointer rounded border-2 border-white"
-                            title={`Change ${player.name}'s color`}
-                          />
+                          <div className="flex flex-col items-center space-y-2">
+                            <input
+                              type="color"
+                              value={player.color || "#3B82F6"}
+                              onChange={(e) =>
+                                changePlayerColor(player.id, e.target.value)
+                              }
+                              className="h-6 w-6 cursor-pointer rounded border-2 border-white"
+                              title={`Change ${player.name}'s color`}
+                            />
+                            <p className="text-xs text-white">
+                              Click to change color
+                            </p>
+                          </div>
                         </div>
                         <h3
-                          className={`mb-2 text-lg font-bold ${
-                            index === currentPlayerIndex
-                              ? "text-blue-300"
-                              : "text-blue-200"
-                          }`}
+                          className={`mb-2 text-lg font-bold ${getTextColor(player.color || "#3B82F6")}`}
                         >
                           {player.name}
                         </h3>
-                        <p className="mb-2 text-xl font-bold text-yellow-300">
+                        <p
+                          className={`mb-2 text-xl font-bold ${getTextColor(player.color || "#3B82F6")}`}
+                        >
                           {player.score} pts
                         </p>
                         {index === currentPlayerIndex && (
-                          <p className="text-sm text-blue-300">Current Turn</p>
+                          <p
+                            className={`text-sm ${getTextColor(player.color || "#3B82F6")}`}
+                          >
+                            Current Turn
+                          </p>
                         )}
                       </div>
                     </div>

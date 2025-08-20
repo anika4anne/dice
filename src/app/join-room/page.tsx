@@ -13,6 +13,7 @@ interface Player {
   isCurrentTurn: boolean;
   rollsLeft: number;
   color?: string;
+  icon?: string;
 }
 
 interface RoomData {
@@ -88,6 +89,24 @@ export default function JoinRoomPage() {
     name: string;
     visible: boolean;
   }>({ name: "", visible: false });
+
+  const availableIcons = [
+    "👤",
+    "😊",
+    "😎",
+    "🤖",
+    "👾",
+    "🦸",
+    "🧙",
+    "🐙",
+    "🦄",
+    "🐉",
+    "⚡",
+    "🔥",
+    "💎",
+    "🎯",
+    "🚀",
+  ];
 
   useEffect(() => {
     if (roomCode && hasJoined) {
@@ -271,7 +290,41 @@ export default function JoinRoomPage() {
   };
 
   const changePlayerColor = (playerId: number, color: string) => {
-    setPlayers(players.map((p) => (p.id === playerId ? { ...p, color } : p)));
+    const updatedPlayers = players.map((p) =>
+      p.id === playerId ? { ...p, color } : p,
+    );
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
+  };
+
+  const changePlayerIcon = (playerId: number, newIcon: string) => {
+    const updatedPlayers = players.map((p) =>
+      p.id === playerId ? { ...p, icon: newIcon } : p,
+    );
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        rooms.set(roomCode, {
+          ...room,
+          players: updatedPlayers,
+        });
+        saveRooms(rooms);
+      }
+    }
   };
 
   const showJoinNotification = (playerName: string) => {
@@ -290,6 +343,16 @@ export default function JoinRoomPage() {
       console.log("Hiding leave notification");
       setLeaveNotification({ name: "", visible: false });
     }, 3000);
+  };
+
+  const getTextColor = (backgroundColor: string) => {
+    if (!backgroundColor) return "text-white";
+    const hex = backgroundColor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+    return brightness > 128 ? "text-black" : "text-white";
   };
 
   const calculateScore = (dice: number[]) => {
@@ -491,7 +554,11 @@ export default function JoinRoomPage() {
                           : "border border-gray-600 bg-white/5"
                     }`}
                   >
-                    {player.isHost && <span className="text-lg">👑</span>}
+                    {player.isHost ? (
+                      <span className="text-lg">👑</span>
+                    ) : (
+                      <span className="text-lg">{player.icon ?? "👤"}</span>
+                    )}
                     <span
                       className={`font-medium ${
                         player.isHost
@@ -508,6 +575,22 @@ export default function JoinRoomPage() {
                     )}
                     {player.id === currentPlayerId && (
                       <span className="text-xs text-orange-300">(You)</span>
+                    )}
+                    {!player.isHost && player.id === currentPlayerId && (
+                      <select
+                        value={player.icon ?? "👤"}
+                        onChange={(e) =>
+                          changePlayerIcon(player.id, e.target.value)
+                        }
+                        className="ml-2 rounded border border-gray-600 bg-gray-700 px-1 py-1 text-xs text-white"
+                        title={`Change your icon`}
+                      >
+                        {availableIcons.map((icon) => (
+                          <option key={icon} value={icon}>
+                            {icon}
+                          </option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 ))}
@@ -681,9 +764,7 @@ export default function JoinRoomPage() {
                           : "border-2 border-blue-300"
                       }`}
                       style={{
-                        backgroundColor: player.color
-                          ? `${player.color}20`
-                          : "#3B82F620",
+                        backgroundColor: player.color ?? "#3B82F6",
                         borderColor: player.color ?? "#3B82F6",
                       }}
                     >
@@ -693,36 +774,80 @@ export default function JoinRoomPage() {
                             {player.isHost ? (
                               <span className="text-xl">👑</span>
                             ) : (
-                              <span className="text-xl">👤</span>
+                              <span className="text-xl">
+                                {player.icon ?? "👤"}
+                              </span>
                             )}
                           </div>
-                          <input
-                            type="color"
-                            value={player.color ?? "#3B82F6"}
-                            onChange={(e) =>
-                              changePlayerColor(player.id, e.target.value)
-                            }
-                            className="h-6 w-6 cursor-pointer rounded border-2 border-white"
-                            title={`Change ${player.name}'s color`}
-                          />
+                          <div className="flex flex-col items-center space-y-2">
+                            <input
+                              type="color"
+                              value={player.color ?? "#3B82F6"}
+                              onChange={(e) =>
+                                changePlayerColor(player.id, e.target.value)
+                              }
+                              className="h-6 w-6 cursor-pointer rounded border-2 border-white"
+                              title={`Change ${player.name}'s color`}
+                            />
+                            <p className="text-xs text-white">
+                              Click to change color
+                            </p>
+
+                            {!player.isHost &&
+                              player.id === currentPlayerId && (
+                                <div className="flex flex-col items-center space-y-1">
+                                  <select
+                                    value={player.icon ?? "👤"}
+                                    onChange={(e) =>
+                                      changePlayerIcon(
+                                        player.id,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+                                    title={`Change ${player.name}'s icon`}
+                                  >
+                                    {availableIcons.map((icon) => (
+                                      <option key={icon} value={icon}>
+                                        {icon}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <p className="text-xs text-white">
+                                    Change icon
+                                  </p>
+                                </div>
+                              )}
+                            {player.isHost && (
+                              <p className="text-xs text-gray-400">
+                                Host cannot change icon
+                              </p>
+                            )}
+                          </div>
                         </div>
                         <h3
-                          className={`mb-2 text-lg font-bold ${
-                            index === currentPlayerIndex
-                              ? "text-blue-300"
-                              : "text-blue-200"
-                          }`}
+                          className={`mb-2 text-lg font-bold ${getTextColor(player.color ?? "#3B82F6")}`}
                         >
                           {player.name}
                         </h3>
-                        <p className="mb-2 text-xl font-bold text-yellow-300">
+                        <p
+                          className={`mb-2 text-xl font-bold ${getTextColor(player.color ?? "#3B82F6")}`}
+                        >
                           {player.score} pts
                         </p>
                         {index === currentPlayerIndex && (
-                          <p className="text-sm text-blue-300">Current Turn</p>
+                          <p
+                            className={`text-sm ${getTextColor(player.color ?? "#3B82F6")}`}
+                          >
+                            Current Turn
+                          </p>
                         )}
                         {player.id === currentPlayerId && (
-                          <p className="text-sm text-blue-200">You</p>
+                          <p
+                            className={`text-sm ${getTextColor(player.color ?? "#3B82F6")}`}
+                          >
+                            You
+                          </p>
                         )}
                       </div>
                     </div>
