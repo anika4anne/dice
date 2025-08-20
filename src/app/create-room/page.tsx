@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 
-
 interface Player {
   id: number;
   name: string;
@@ -60,7 +59,7 @@ export default function CreateRoomPage() {
       dice: [1, 1, 1, 1, 1],
       isCurrentTurn: false,
       rollsLeft: 3,
-      color: "#FCD34D", // Default yellow color
+      color: "#FCD34D",
     },
   ]);
   const [hostName, setHostName] = useState("");
@@ -76,6 +75,10 @@ export default function CreateRoomPage() {
     name: string;
     visible: boolean;
   }>({ name: "", visible: false });
+  const [leaveNotification, setLeaveNotification] = useState<{
+    name: string;
+    visible: boolean;
+  }>({ name: "", visible: false });
 
   useEffect(() => {
     if (roomCode && showRoomInfo) {
@@ -83,7 +86,6 @@ export default function CreateRoomPage() {
         const rooms = getRooms();
         const room = rooms.get(roomCode);
         if (room) {
-          // Check if a new player joined
           if (room.players.length > players.length) {
             const newPlayer = room.players.find(
               (p) => !players.some((existing) => existing.id === p.id),
@@ -94,7 +96,16 @@ export default function CreateRoomPage() {
             }
           }
 
-          // Ensure all players have colors
+          if (room.players.length < players.length) {
+            const leftPlayer = players.find(
+              (p) => !room.players.some((existing) => existing.id === p.id),
+            );
+            if (leftPlayer) {
+              console.log("Player left detected:", leftPlayer.name);
+              showLeaveNotification(leftPlayer.name);
+            }
+          }
+
           const playersWithColors = room.players.map((player) => ({
             ...player,
             color: player.color || "#FCD34D",
@@ -253,7 +264,7 @@ export default function CreateRoomPage() {
           dice: [1, 1, 1, 1, 1],
           isCurrentTurn: false,
           rollsLeft: 3,
-          color: "#FCD34D", // Default yellow color
+          color: "#FCD34D",
         },
       ],
       totalRounds,
@@ -348,7 +359,14 @@ export default function CreateRoomPage() {
     }, 3000);
   };
 
-
+  const showLeaveNotification = (playerName: string) => {
+    console.log("Showing leave notification for:", playerName);
+    setLeaveNotification({ name: playerName, visible: true });
+    setTimeout(() => {
+      console.log("Hiding leave notification");
+      setLeaveNotification({ name: "", visible: false });
+    }, 3000);
+  };
 
   const startGame = async () => {
     if (!hostName.trim()) {
@@ -366,7 +384,7 @@ export default function CreateRoomPage() {
       dice: [1, 1, 1, 1, 1],
       isCurrentTurn: index === 0,
       rollsLeft: 3,
-      color: player.color || "#FCD34D", // Ensure color is preserved
+      color: player.color || "#FCD34D",
     }));
 
     setPlayers(gamePlayers);
@@ -950,14 +968,26 @@ export default function CreateRoomPage() {
           </div>
         )}
 
-        {/* Join Notification */}
         {joinNotification.visible && (
           <div className="animate-slide-in-right fixed top-4 right-4 z-50">
             <div className="rounded-lg bg-green-600 p-4 shadow-lg">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">🎉</span>
+                <span className="text-lg">^_^</span>
                 <p className="font-medium text-white">
                   {joinNotification.name} has joined the room!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {leaveNotification.visible && (
+          <div className="animate-slide-in-right fixed top-4 right-4 z-50">
+            <div className="rounded-lg bg-red-600 p-4 shadow-lg">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">👋</span>
+                <p className="font-medium text-white">
+                  {leaveNotification.name} has left the room!
                 </p>
               </div>
             </div>

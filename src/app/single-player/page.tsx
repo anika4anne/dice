@@ -51,7 +51,6 @@ export default function SinglePlayerPage() {
   }, [isRolling]);
 
   const triggerConfetti = () => {
-    // Spectacular confetti for game winner
     void confetti({
       particleCount: 150,
       spread: 90,

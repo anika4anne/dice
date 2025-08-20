@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 
-
 interface Player {
   id: number;
   name: string;
@@ -85,6 +84,10 @@ export default function JoinRoomPage() {
     name: string;
     visible: boolean;
   }>({ name: "", visible: false });
+  const [leaveNotification, setLeaveNotification] = useState<{
+    name: string;
+    visible: boolean;
+  }>({ name: "", visible: false });
 
   useEffect(() => {
     if (roomCode && hasJoined) {
@@ -101,7 +104,6 @@ export default function JoinRoomPage() {
             return;
           }
 
-          // Check if a new player joined
           if (room.players.length > players.length) {
             const newPlayer = room.players.find(
               (p) => !players.some((existing) => existing.id === p.id),
@@ -109,6 +111,17 @@ export default function JoinRoomPage() {
             if (newPlayer) {
               console.log("New player detected:", newPlayer.name);
               showJoinNotification(newPlayer.name);
+            }
+          }
+
+          // Check if a player left
+          if (room.players.length < players.length) {
+            const leftPlayer = players.find(
+              (p) => !room.players.some((existing) => existing.id === p.id),
+            );
+            if (leftPlayer) {
+              console.log("Player left detected:", leftPlayer.name);
+              showLeaveNotification(leftPlayer.name);
             }
           }
 
@@ -187,7 +200,6 @@ export default function JoinRoomPage() {
       setHasJoined(true);
       setHasBeenRemoved(false);
 
-      // Show join notification for the new player
       showJoinNotification(playerName);
     }, 1500);
   };
@@ -268,6 +280,15 @@ export default function JoinRoomPage() {
     setTimeout(() => {
       console.log("Hiding join notification");
       setJoinNotification({ name: "", visible: false });
+    }, 3000);
+  };
+
+  const showLeaveNotification = (playerName: string) => {
+    console.log("Showing leave notification for:", playerName);
+    setLeaveNotification({ name: playerName, visible: true });
+    setTimeout(() => {
+      console.log("Hiding leave notification");
+      setLeaveNotification({ name: "", visible: false });
     }, 3000);
   };
 
@@ -847,14 +868,26 @@ export default function JoinRoomPage() {
           </div>
         )}
 
-        {/* Join Notification */}
         {joinNotification.visible && (
           <div className="animate-slide-in-right fixed top-4 right-4 z-50">
             <div className="rounded-lg bg-green-600 p-4 shadow-lg">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">🎉</span>
+                <span className="text-lg">^_^</span>
                 <p className="font-medium text-white">
                   {joinNotification.name} has joined the room!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {leaveNotification.visible && (
+          <div className="animate-slide-in-right fixed top-4 right-4 z-50">
+            <div className="rounded-lg bg-red-600 p-4 shadow-lg">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">👋</span>
+                <p className="font-medium text-white">
+                  {leaveNotification.name} has left the room!
                 </p>
               </div>
             </div>
