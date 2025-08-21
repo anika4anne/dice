@@ -201,7 +201,7 @@ export default function MultiplayerPage() {
             isCurrentTurn: index === 0,
           })),
         );
-      }, 3000); // Increased delay to show confetti longer
+      }, 3000);  
     }
   };
 
@@ -216,7 +216,7 @@ export default function MultiplayerPage() {
     setFinalResults(results);
     setShowLeaderboard(true);
 
-    // Spectacular confetti for game winner
+ 
     void confetti({
       particleCount: 150,
       spread: 90,
@@ -427,7 +427,7 @@ export default function MultiplayerPage() {
           </div>
         ) : (
           <>
-            {/* Game Status Box */}
+     
             <div className="mb-6 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 p-6 text-center">
               <div className="mb-2 flex items-center justify-center space-x-2">
                 <span className="text-2xl">🎲</span>
@@ -444,7 +444,7 @@ export default function MultiplayerPage() {
               </p>
             </div>
 
-            {/* Current Turn and Dice Section */}
+           
             <div className="mb-6 rounded-lg bg-gray-800 p-6 text-center">
               <h3 className="mb-2 text-xl text-white">
                 {players[currentPlayerIndex]?.name}&apos;s Turn
@@ -470,7 +470,7 @@ export default function MultiplayerPage() {
               )}
             </div>
 
-            {/* Player Cards - Smaller and at bottom */}
+
             <div className="mb-6 flex justify-center gap-4">
               {players.map((player) => (
                 <div

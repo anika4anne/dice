@@ -25,6 +25,13 @@ interface RoomData {
   currentRound: number;
   currentPlayerIndex: number;
   roundScores: Record<number, number>[];
+  chatMessages?: Array<{
+    id: string;
+    playerName: string;
+    message: string;
+    timestamp: number;
+    isSystemMessage?: boolean;
+  }>;
 }
 
 const getRooms = (): Map<string, RoomData> => {
@@ -107,6 +114,16 @@ export default function JoinRoomPage() {
     "🎯",
     "🚀",
   ];
+  const [chatMessages, setChatMessages] = useState<
+    Array<{
+      id: string;
+      playerName: string;
+      message: string;
+      timestamp: number;
+      isSystemMessage?: boolean;
+    }>
+  >([]);
+  const [chatInput, setChatInput] = useState("");
 
   useEffect(() => {
     if (roomCode && hasJoined) {
@@ -130,10 +147,33 @@ export default function JoinRoomPage() {
             if (newPlayer) {
               console.log("New player detected:", newPlayer.name);
               showJoinNotification(newPlayer.name);
+
+              if (gameStarted) {
+                const joinMessage = {
+                  id: Date.now().toString(),
+                  playerName: "",
+                  message: `${newPlayer.name} has joined the game`,
+                  timestamp: Date.now(),
+                  isSystemMessage: true,
+                };
+                setChatMessages((prev) => [...prev, joinMessage]);
+
+                if (roomCode) {
+                  const rooms = getRooms();
+                  const room = rooms.get(roomCode);
+                  if (room) {
+                    const updatedRoom = {
+                      ...room,
+                      chatMessages: [...(room.chatMessages ?? []), joinMessage],
+                    };
+                    rooms.set(roomCode, updatedRoom);
+                    saveRooms(rooms);
+                  }
+                }
+              }
             }
           }
 
-          // Check if a player left
           if (room.players.length < players.length) {
             const leftPlayer = players.find(
               (p) => !room.players.some((existing) => existing.id === p.id),
@@ -141,6 +181,33 @@ export default function JoinRoomPage() {
             if (leftPlayer) {
               console.log("Player left detected:", leftPlayer.name);
               showLeaveNotification(leftPlayer.name);
+
+              if (gameStarted) {
+                const leaveMessage = {
+                  id: Date.now().toString(),
+                  playerName: "",
+                  message: `${leftPlayer.name} has left the game`,
+                  timestamp: Date.now(),
+                  isSystemMessage: true,
+                };
+                setChatMessages((prev) => [...prev, leaveMessage]);
+
+                if (roomCode) {
+                  const rooms = getRooms();
+                  const room = rooms.get(roomCode);
+                  if (room) {
+                    const updatedRoom = {
+                      ...room,
+                      chatMessages: [
+                        ...(room.chatMessages ?? []),
+                        leaveMessage,
+                      ],
+                    };
+                    rooms.set(roomCode, updatedRoom);
+                    saveRooms(rooms);
+                  }
+                }
+              }
             }
           }
 
@@ -152,12 +219,20 @@ export default function JoinRoomPage() {
           setCurrentRound(room.currentRound || 1);
           setCurrentPlayerIndex(room.currentPlayerIndex || 0);
           setRoundScores(room.roundScores || []);
+          setChatMessages(room.chatMessages ?? []);
         }
       }, 2000);
 
       return () => clearInterval(interval);
     }
   }, [roomCode, hasJoined, currentPlayerId, players]);
+
+  useEffect(() => {
+    const chatContainer = document.querySelector(".chat-messages");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [chatMessages]);
 
   const joinRoom = () => {
     if (!roomCode.trim()) {
@@ -322,6 +397,33 @@ export default function JoinRoomPage() {
           ...room,
           players: updatedPlayers,
         });
+        saveRooms(rooms);
+      }
+    }
+  };
+
+  const sendChatMessage = () => {
+    if (!chatInput.trim()) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      playerName: playerName,
+      message: chatInput.trim(),
+      timestamp: Date.now(),
+    };
+
+    setChatMessages((prev) => [...prev, newMessage]);
+    setChatInput("");
+
+    if (roomCode) {
+      const rooms = getRooms();
+      const room = rooms.get(roomCode);
+      if (room) {
+        const updatedRoom = {
+          ...room,
+          chatMessages: [...(room.chatMessages ?? []), newMessage],
+        };
+        rooms.set(roomCode, updatedRoom);
         saveRooms(rooms);
       }
     }
@@ -525,19 +627,6 @@ export default function JoinRoomPage() {
           </div>
         ) : !gameStarted ? (
           <div className="mb-8 text-center">
-            <div className="mb-6 rounded-lg bg-green-900 p-6">
-              <h3 className="mb-4 text-xl font-bold text-white">
-                🎉 successfully joined!
-              </h3>
-              <p className="mb-2 text-lg text-green-300">
-                Room Code: {roomCode}
-              </p>
-              <p className="text-gray-300">
-                welcome, {playerName}! waiting for the host to start the game...
-              </p>
-              <p className="mt-2 text-xs text-green-300"></p>
-            </div>
-
             <div className="mb-6 rounded-lg bg-blue-900 p-4">
               <h3 className="mb-4 text-lg font-bold text-white">
                 Players ({players.length}/6)
@@ -576,22 +665,24 @@ export default function JoinRoomPage() {
                     {player.id === currentPlayerId && (
                       <span className="text-xs text-orange-300">(You)</span>
                     )}
-                    {!player.isHost && player.id === currentPlayerId && (
-                      <select
-                        value={player.icon ?? "👤"}
-                        onChange={(e) =>
-                          changePlayerIcon(player.id, e.target.value)
-                        }
-                        className="ml-2 rounded border border-gray-600 bg-gray-700 px-1 py-1 text-xs text-white"
-                        title={`Change your icon`}
-                      >
-                        {availableIcons.map((icon) => (
-                          <option key={icon} value={icon}>
-                            {icon}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                    {!player.isHost &&
+                      player.id === currentPlayerId &&
+                      !gameStarted && (
+                        <select
+                          value={player.icon ?? "👤"}
+                          onChange={(e) =>
+                            changePlayerIcon(player.id, e.target.value)
+                          }
+                          className="ml-2 rounded border border-gray-600 bg-gray-700 px-1 py-1 text-xs text-white"
+                          title={`Change your icon`}
+                        >
+                          {availableIcons.map((icon) => (
+                            <option key={icon} value={icon}>
+                              {icon}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                   </div>
                 ))}
               </div>
@@ -616,6 +707,48 @@ export default function JoinRoomPage() {
               >
                 Leave Room
               </button>
+            </div>
+
+            <div className="fixed top-28 right-16 bottom-28 z-50 flex w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm">
+              <h3 className="mb-4 text-lg font-bold text-white">Lobby Chat</h3>
+              <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 flex-1 space-y-2 overflow-y-auto">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className="flex items-start space-x-2">
+                    <span
+                      className={`text-sm font-semibold ${msg.isSystemMessage ? "text-red-400" : "text-blue-300"}`}
+                    >
+                      {msg.isSystemMessage ? "" : `${msg.playerName}:`}
+                    </span>
+                    <span
+                      className={`text-sm break-words ${
+                        msg.isSystemMessage
+                          ? msg.message.includes("joined")
+                            ? "text-green-300"
+                            : "text-red-300"
+                          : "text-white"
+                      }`}
+                    >
+                      {msg.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto flex space-x-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                  placeholder="Type a message..."
+                  className="flex-1 rounded border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400"
+                />
+                <button
+                  onClick={sendChatMessage}
+                  className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                >
+                  Send
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-center">
@@ -780,21 +913,28 @@ export default function JoinRoomPage() {
                             )}
                           </div>
                           <div className="flex flex-col items-center space-y-2">
-                            <input
-                              type="color"
-                              value={player.color ?? "#3B82F6"}
-                              onChange={(e) =>
-                                changePlayerColor(player.id, e.target.value)
-                              }
-                              className="h-6 w-6 cursor-pointer rounded border-2 border-white"
-                              title={`Change ${player.name}'s color`}
-                            />
-                            <p className="text-xs text-white">
-                              Click to change color
-                            </p>
+                            {player.id === currentPlayerId ? (
+                              <>
+                                <input
+                                  type="color"
+                                  value={player.color ?? "#3B82F6"}
+                                  onChange={(e) =>
+                                    changePlayerColor(player.id, e.target.value)
+                                  }
+                                  className="h-6 w-6 cursor-pointer rounded border-2 border-white"
+                                  title={`Change your color`}
+                                />
+                                <p className="text-xs text-white">
+                                  Click to change color
+                                </p>
+                              </>
+                            ) : (
+                              <div className="h-6 w-6 rounded border-2 border-white bg-gray-400"></div>
+                            )}
 
                             {!player.isHost &&
-                              player.id === currentPlayerId && (
+                              player.id === currentPlayerId &&
+                              !gameStarted && (
                                 <div className="flex flex-col items-center space-y-1">
                                   <select
                                     value={player.icon ?? "👤"}
@@ -818,7 +958,7 @@ export default function JoinRoomPage() {
                                   </p>
                                 </div>
                               )}
-                            {player.isHost && (
+                            {player.isHost && !gameStarted && (
                               <p className="text-xs text-gray-400">
                                 Host cannot change icon
                               </p>
@@ -865,6 +1005,50 @@ export default function JoinRoomPage() {
                   >
                     Leave Game
                   </button>
+                </div>
+
+                <div className="fixed top-28 right-16 bottom-28 z-50 flex w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm">
+                  <h3 className="mb-4 text-lg font-bold text-white">
+                    Game Chat
+                  </h3>
+                  <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 flex-1 space-y-2 overflow-y-auto">
+                    {chatMessages.map((msg) => (
+                      <div key={msg.id} className="flex items-start space-x-2">
+                        <span
+                          className={`text-sm font-semibold ${msg.isSystemMessage ? "text-red-400" : "text-blue-300"}`}
+                        >
+                          {msg.isSystemMessage ? "" : `${msg.playerName}:`}
+                        </span>
+                        <span
+                          className={`text-sm break-words ${
+                            msg.isSystemMessage
+                              ? msg.message.includes("joined")
+                                ? "text-green-300"
+                                : "text-red-300"
+                              : "text-white"
+                          }`}
+                        >
+                          {msg.message}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto flex space-x-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                      placeholder="Type a message..."
+                      className="flex-1 rounded border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400"
+                    />
+                    <button
+                      onClick={sendChatMessage}
+                      className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                    >
+                      Send
+                    </button>
+                  </div>
                 </div>
               </>
             )}

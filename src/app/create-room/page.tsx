@@ -25,6 +25,13 @@ interface RoomData {
   currentRound: number;
   currentPlayerIndex: number;
   roundScores: Record<number, number>[];
+  chatMessages?: Array<{
+    id: string;
+    playerName: string;
+    message: string;
+    timestamp: number;
+    isSystemMessage?: boolean;
+  }>;
 }
 
 const getRooms = (): Map<string, RoomData> => {
@@ -80,24 +87,17 @@ export default function CreateRoomPage() {
     name: string;
     visible: boolean;
   }>({ name: "", visible: false });
-
-  const availableIcons = [
-    "👤",
-    "😊",
-    "😎",
-    "🤖",
-    "👾",
-    "🦸",
-    "🧙",
-    "🐙",
-    "🦄",
-    "🐉",
-    "⚡",
-    "🔥",
-    "💎",
-    "🎯",
-    "🚀",
-  ];
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [chatMessages, setChatMessages] = useState<
+    Array<{
+      id: string;
+      playerName: string;
+      message: string;
+      timestamp: number;
+      isSystemMessage?: boolean;
+    }>
+  >([]);
+  const [chatInput, setChatInput] = useState("");
 
   useEffect(() => {
     if (roomCode && showRoomInfo) {
@@ -112,6 +112,30 @@ export default function CreateRoomPage() {
             if (newPlayer) {
               console.log("New player detected:", newPlayer.name);
               showJoinNotification(newPlayer.name);
+
+              if (gameStarted) {
+                const joinMessage = {
+                  id: Date.now().toString(),
+                  playerName: "System",
+                  message: `${newPlayer.name} has joined the game`,
+                  timestamp: Date.now(),
+                  isSystemMessage: true,
+                };
+                setChatMessages((prev) => [...prev, joinMessage]);
+
+                if (roomCode) {
+                  const rooms = getRooms();
+                  const room = rooms.get(roomCode);
+                  if (room) {
+                    const updatedRoom = {
+                      ...room,
+                      chatMessages: [...(room.chatMessages ?? []), joinMessage],
+                    };
+                    rooms.set(roomCode, updatedRoom);
+                    saveRooms(rooms);
+                  }
+                }
+              }
             }
           }
 
@@ -122,6 +146,33 @@ export default function CreateRoomPage() {
             if (leftPlayer) {
               console.log("Player left detected:", leftPlayer.name);
               showLeaveNotification(leftPlayer.name);
+
+              if (gameStarted) {
+                const leaveMessage = {
+                  id: Date.now().toString(),
+                  playerName: "",
+                  message: `${leftPlayer.name} has left the game`,
+                  timestamp: Date.now(),
+                  isSystemMessage: true,
+                };
+                setChatMessages((prev) => [...prev, leaveMessage]);
+
+                if (roomCode) {
+                  const rooms = getRooms();
+                  const room = rooms.get(roomCode);
+                  if (room) {
+                    const updatedRoom = {
+                      ...room,
+                      chatMessages: [
+                        ...(room.chatMessages ?? []),
+                        leaveMessage,
+                      ],
+                    };
+                    rooms.set(roomCode, updatedRoom);
+                    saveRooms(rooms);
+                  }
+                }
+              }
             }
           }
 
@@ -137,12 +188,20 @@ export default function CreateRoomPage() {
           setCurrentRound(room.currentRound || 1);
           setCurrentPlayerIndex(room.currentPlayerIndex || 0);
           setRoundScores(room.roundScores || []);
+          setChatMessages(room.chatMessages ?? []);
         }
       }, 2000);
 
       return () => clearInterval(interval);
     }
   }, [roomCode, showRoomInfo, players]);
+
+  useEffect(() => {
+    const chatContainer = document.querySelector(".chat-messages");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [chatMessages]);
 
   const getDiceMax = () => {
     const maxMap = {
@@ -272,7 +331,6 @@ export default function CreateRoomPage() {
     setRoomCode(code);
     setShowRoomInfo(true);
 
-    // Update the host player name when creating room
     const updatedPlayers = players.map((player) =>
       player.isHost ? { ...player, name: hostName || "Host" } : player,
     );
@@ -327,7 +385,6 @@ export default function CreateRoomPage() {
   };
 
   const updatePlayerName = (id: number, name: string) => {
-    // Only allow host to change their own name (id === 1)
     if (id !== 1) return;
 
     const updatedPlayers = players.map((player) =>
@@ -351,25 +408,6 @@ export default function CreateRoomPage() {
   const changePlayerColor = (playerId: number, newColor: string) => {
     const updatedPlayers = players.map((player) =>
       player.id === playerId ? { ...player, color: newColor } : player,
-    );
-    setPlayers(updatedPlayers);
-
-    if (roomCode) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        rooms.set(roomCode, {
-          ...room,
-          players: updatedPlayers,
-        });
-        saveRooms(rooms);
-      }
-    }
-  };
-
-  const changePlayerIcon = (playerId: number, newIcon: string) => {
-    const updatedPlayers = players.map((player) =>
-      player.id === playerId ? { ...player, icon: newIcon } : player,
     );
     setPlayers(updatedPlayers);
 
@@ -424,38 +462,77 @@ export default function CreateRoomPage() {
       return;
     }
 
-    const gamePlayers = players.map((player, index) => ({
-      ...player,
-      score: 0,
-      dice: [1, 1, 1, 1, 1],
-      isCurrentTurn: index === 0,
-      rollsLeft: 3,
-      color: player.color || "#FCD34D",
-    }));
+    setCountdown(5);
 
-    setPlayers(gamePlayers);
-    setGameStarted(true);
-    setCurrentPlayerIndex(0);
-    setCurrentRound(1);
-    setRoundScores([]);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownInterval);
+          const gamePlayers = players.map((player, index) => ({
+            ...player,
+            score: 0,
+            dice: [1, 1, 1, 1, 1],
+            isCurrentTurn: index === 0,
+            rollsLeft: 3,
+            color: player.color || "#FCD34D",
+          }));
+
+          setPlayers(gamePlayers);
+          setGameStarted(true);
+          setCurrentPlayerIndex(0);
+          setCurrentRound(1);
+          setRoundScores([]);
+          setCountdown(null);
+
+          if (roomCode) {
+            const rooms = getRooms();
+            const room = rooms.get(roomCode);
+            if (room) {
+              rooms.set(roomCode, {
+                ...room,
+                players: gamePlayers,
+                gameStarted: true,
+                currentRound: 1,
+                currentPlayerIndex: 0,
+                roundScores: [],
+              });
+              saveRooms(rooms);
+            }
+          }
+
+          void confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const sendChatMessage = () => {
+    if (!chatInput.trim()) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      playerName: hostName || "Host",
+      message: chatInput.trim(),
+      timestamp: Date.now(),
+    };
+
+    setChatMessages((prev) => [...prev, newMessage]);
+    setChatInput("");
 
     if (roomCode) {
       const rooms = getRooms();
       const room = rooms.get(roomCode);
       if (room) {
-        rooms.set(roomCode, {
+        const updatedRoom = {
           ...room,
-          players: gamePlayers,
-          gameStarted: true,
-          currentRound: 1,
-          currentPlayerIndex: 0,
-          roundScores: [],
-        });
+          chatMessages: [...(room.chatMessages ?? []), newMessage],
+        };
+        rooms.set(roomCode, updatedRoom);
         saveRooms(rooms);
       }
     }
-
-    void confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
   };
 
   const copyRoomCode = async () => {
@@ -646,7 +723,7 @@ export default function CreateRoomPage() {
                           />
                           {player.isHost ? (
                             <span className="ml-2 text-xs text-gray-400">
-                              Host can't change icon
+                              Host can&apos;t change icon
                             </span>
                           ) : null}
                         </div>
@@ -686,6 +763,50 @@ export default function CreateRoomPage() {
                       </svg>
                     </div>
                   </button>
+                </div>
+
+                <div className="fixed top-28 right-16 bottom-28 z-50 flex w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm">
+                  <h3 className="mb-4 text-lg font-bold text-white">
+                    Lobby Chat
+                  </h3>
+                  <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 flex-1 space-y-2 overflow-y-auto">
+                    {chatMessages.map((msg) => (
+                      <div key={msg.id} className="flex items-start space-x-2">
+                        <span
+                          className={`text-sm font-semibold ${msg.isSystemMessage ? "text-red-400" : "text-blue-300"}`}
+                        >
+                          {msg.isSystemMessage ? "" : `${msg.playerName}:`}
+                        </span>
+                        <span
+                          className={`text-sm break-words ${
+                            msg.isSystemMessage
+                              ? msg.message.includes("joined")
+                                ? "text-green-300"
+                                : "text-red-300"
+                              : "text-white"
+                          }`}
+                        >
+                          {msg.message}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto flex space-x-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                      placeholder="Type a message..."
+                      className="flex-1 rounded border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400"
+                    />
+                    <button
+                      onClick={sendChatMessage}
+                      className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                    >
+                      Send
+                    </button>
+                  </div>
                 </div>
 
                 {showHowToPlay && (
@@ -837,10 +958,12 @@ export default function CreateRoomPage() {
 
                 <button
                   onClick={startGame}
-                  disabled={players.length < 2 || !hostName.trim()}
+                  disabled={
+                    players.length < 2 || !hostName.trim() || countdown !== null
+                  }
                   className="rounded-lg bg-green-600 px-8 py-3 text-white hover:bg-green-700 disabled:opacity-50"
                 >
-                  start game
+                  {countdown !== null ? "Starting..." : "start game"}
                 </button>
               </div>
             )}
@@ -983,18 +1106,24 @@ export default function CreateRoomPage() {
                             )}
                           </div>
                           <div className="flex flex-col items-center space-y-2">
-                            <input
-                              type="color"
-                              value={player.color || "#3B82F6"}
-                              onChange={(e) =>
-                                changePlayerColor(player.id, e.target.value)
-                              }
-                              className="h-6 w-6 cursor-pointer rounded border-2 border-white"
-                              title={`Change ${player.name}'s color`}
-                            />
-                            <p className="text-xs text-white">
-                              Click to change color
-                            </p>
+                            {player.id === 1 ? (
+                              <>
+                                <input
+                                  type="color"
+                                  value={player.color || "#3B82F6"}
+                                  onChange={(e) =>
+                                    changePlayerColor(player.id, e.target.value)
+                                  }
+                                  className="h-6 w-6 cursor-pointer rounded border-2 border-white"
+                                  title={`Change your color`}
+                                />
+                                <p className="text-xs text-white">
+                                  Click to change color
+                                </p>
+                              </>
+                            ) : (
+                              <div className="h-6 w-6 rounded border-2 border-white bg-gray-400"></div>
+                            )}
                           </div>
                         </div>
                         <h3
@@ -1031,8 +1160,63 @@ export default function CreateRoomPage() {
                     Back to Setup
                   </button>
                 </div>
+
+                <div className="fixed top-28 right-16 bottom-28 z-50 flex w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm">
+                  <h3 className="mb-4 text-lg font-bold text-white">
+                    Game Chat
+                  </h3>
+                  <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 flex-1 space-y-2 overflow-y-auto">
+                    {chatMessages.map((msg) => (
+                      <div key={msg.id} className="flex items-start space-x-2">
+                        <span
+                          className={`text-sm font-semibold ${msg.isSystemMessage ? "text-red-400" : "text-blue-300"}`}
+                        >
+                          {msg.isSystemMessage ? "" : `${msg.playerName}:`}
+                        </span>
+                        <span
+                          className={`text-sm break-words ${
+                            msg.isSystemMessage
+                              ? msg.message.includes("joined")
+                                ? "text-green-300"
+                                : "text-red-300"
+                              : "text-white"
+                          }`}
+                        >
+                          {msg.message}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto flex space-x-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                      placeholder="Type a message..."
+                      className="flex-1 rounded border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400"
+                    />
+                    <button
+                      onClick={sendChatMessage}
+                      className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
               </>
             )}
+          </div>
+        )}
+
+        {countdown !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="text-center">
+              <div className="mb-4 animate-pulse text-6xl font-bold text-white">
+                {countdown}
+              </div>
+              <p className="text-2xl text-white">Starting in {countdown}...</p>
+            </div>
           </div>
         )}
 
