@@ -272,20 +272,15 @@ export default function CreateRoomPage() {
     setRoomCode(code);
     setShowRoomInfo(true);
 
+    // Update the host player name when creating room
+    const updatedPlayers = players.map((player) =>
+      player.isHost ? { ...player, name: hostName || "Host" } : player,
+    );
+    setPlayers(updatedPlayers);
+
     const rooms = getRooms();
     rooms.set(code, {
-      players: [
-        {
-          id: 1,
-          name: "Host",
-          isHost: true,
-          score: 0,
-          dice: [1, 1, 1, 1, 1],
-          isCurrentTurn: false,
-          rollsLeft: 3,
-          color: "#FCD34D",
-        },
-      ],
+      players: updatedPlayers,
       totalRounds,
       gameMode,
       diceType,
@@ -332,6 +327,9 @@ export default function CreateRoomPage() {
   };
 
   const updatePlayerName = (id: number, name: string) => {
+    // Only allow host to change their own name (id === 1)
+    if (id !== 1) return;
+
     const updatedPlayers = players.map((player) =>
       player.id === id ? { ...player, name } : player,
     );
@@ -633,8 +631,18 @@ export default function CreateRoomPage() {
                             onChange={(e) =>
                               updatePlayerName(player.id, e.target.value)
                             }
-                            className="rounded border border-gray-600 bg-gray-700 px-2 py-1 text-white"
+                            className={`rounded border px-2 py-1 text-white ${
+                              player.isHost
+                                ? "border-gray-600 bg-gray-700"
+                                : "cursor-not-allowed border-gray-500 bg-gray-600"
+                            }`}
                             placeholder="Player name"
+                            readOnly={!player.isHost}
+                            title={
+                              player.isHost
+                                ? "Click to edit your name"
+                                : "Only players can change their own names"
+                            }
                           />
                           {player.isHost ? (
                             <span className="ml-2 text-xs text-gray-400">
