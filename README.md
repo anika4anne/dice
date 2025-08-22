@@ -1,5 +1,14 @@
 # Dice Game
 
+1) What is my project?
+  - My project is a dice game, and basically you roll a dice and (there's different game modes, so rn i'll just explain one of them), if the number you rolled adds up to be more than the number rolled by your opponent you win
+2) Why i made this project?
+- I made this project because it was it was a pretty cool idea,and i really wanted to start getting into making private rooms and stuff like that so i can soon make real 3d games
+3) How i made this project?
+  - Okay so my project is built with next.js, and used pnpm create t3-app, which sets up all the essential files, and from there on i can create folders and page.tsx to route it to different pages of my website
+4) What i struggled with and what I learnt
+  - I struggled with making private rooms and having live syncing work because i would originally have to reload for new players to join a private room, and i fixed it by using local storage system rather than using websockets (using websockets i tried it but it got complicated and i gave up)
+
 
 You can clone my website with the following commands (if you want to)
 
@@ -15,7 +24,8 @@ Some things to know: I've got the background image for free from google (yes i'v
 Images:
 This is the homepage
 
-<img width="1726" height="1057" alt="image" src="https://github.com/user-attachments/assets/9b404dbb-079b-445d-8787-8b9e23c8e127" />
+<img width="1905" height="1069" alt="image" src="https://github.com/user-attachments/assets/66888fa3-9fb1-4b89-96d7-6e783b50e0b4" />
+
 
 Play Solo 
 You can change the game settings, there are multiple ways to play the game (<img width="242" height="150" alt="image" src="https://github.com/user-attachments/assets/0ccaa5d2-2e13-4070-afdb-05d32a526662" />
