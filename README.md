@@ -1,5 +1,7 @@
 # Dice Game
 
+[![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
+
 1) What is my project?
   - My project is a dice game, and basically you roll a dice and (there's different game modes, so rn i'll just explain one of them), if the number you rolled adds up to be more than the number rolled by your opponent you win
 2) Why i made this project?
