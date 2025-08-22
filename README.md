@@ -41,8 +41,9 @@ Multplayer:
 You can add up to 6 people, and they will all play on the same laptop
 <img width="621" height="660" alt="image" src="https://github.com/user-attachments/assets/a616461e-110b-4af0-a6e6-9a88159ee9fa" />
 
-<img width="807" height="563" alt="image" src="https://github.com/user-attachments/assets/9193a099-2fd9-4c49-8a03-42f9a139d9fd" />
+<img width="1696" height="1005" alt="image" src="https://github.com/user-attachments/assets/e299a301-374c-4f7e-9148-01639070816b" />
 
+Also added a feauture where you can leave the room by clicking the red button at the bottom. 
 
 Create Private Room:
 You can create a separate room for your friends where they play on their own devices
@@ -65,6 +66,7 @@ Join private room:
 
 Host is allowed to kick people, and when host kicks people the players get notification ---- left the room, and if someone joins the room it says ---- joined the room
 Also if host leaves the room, then the player who joined right after the host is given all the host perms
+When people change their box color, is the color is dark then the text on it automatically become white, and if the color changes to light color then the tect automatically become black, that way it's easier to see and adjusts pretty quickly
 
 
 
