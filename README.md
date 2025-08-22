@@ -48,7 +48,12 @@ Create Private Room:
 You can create a separate room for your friends where they play on their own devices
 <img width="799" height="927" alt="image" src="https://github.com/user-attachments/assets/4ac81df6-4706-461b-a234-df7b8e3efc86" />
 
-<img width="1681" height="999" alt="image" src="https://github.com/user-attachments/assets/3c20bc23-f2a2-476e-8a93-9ad089654f74" />
+<img width="1313" height="1034" alt="image" src="https://github.com/user-attachments/assets/365b3794-4056-4051-a8d8-bc59e866ad79" />
+
+I've also added a feature where player can change their icon, so they don't always have to stick to their plain old person emoji. 
+Also some more features i have added:
+  - Player can now change the color of their own box, and set it to whatever color they want it to be
+  - THere is now a chat box so everyone get type it in to messsage your friends during a game
 
 I've also added a confetti thing, so when a new player joins it shows up
 
@@ -57,6 +62,9 @@ Join private room:
 <img width="822" height="996" alt="image" src="https://github.com/user-attachments/assets/5823b320-f9f6-41ba-bc45-68a064fa60db" />
 
 <img width="1681" height="999" alt="image" src="https://github.com/user-attachments/assets/d8bc5e30-f1b6-446e-ab71-40cc00495d02" />
+
+Host is allowed to kick people, and when host kicks people the players get notification ---- left the room, and if someone joins the room it says ---- joined the room
+Also if host leaves the room, then the player who joined right after the host is given all the host perms
 
 
 
