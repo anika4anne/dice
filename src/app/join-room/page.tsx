@@ -3,54 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { webSocketService, type Player, type RoomData } from "../../services/websocket";
 
-interface Player {
-  id: number;
-  name: string;
-  isHost: boolean;
-  score: number;
-  dice: number[];
-  isCurrentTurn: boolean;
-  rollsLeft: number;
-  color?: string;
-  icon?: string;
-}
 
-interface RoomData {
-  players: Player[];
-  totalRounds: number;
-  gameMode: string;
-  diceType: string;
-  gameStarted: boolean;
-  currentRound: number;
-  currentPlayerIndex: number;
-  roundScores: Record<number, number>[];
-  chatMessages?: Array<{
-    id: string;
-    playerName: string;
-    message: string;
-    timestamp: number;
-    isSystemMessage?: boolean;
-  }>;
-}
 
-const getRooms = (): Map<string, RoomData> => {
-  if (typeof window === "undefined") return new Map();
 
-  const stored = localStorage.getItem("dice-game-rooms");
-  if (stored) {
-    const parsed = JSON.parse(stored) as Record<string, RoomData>;
-    return new Map(Object.entries(parsed));
-  }
-  return new Map();
-};
-
-const saveRooms = (rooms: Map<string, RoomData>) => {
-  if (typeof window === "undefined") return;
-
-  const obj = Object.fromEntries(rooms);
-  localStorage.setItem("dice-game-rooms", JSON.stringify(obj));
-};
 
 export default function JoinRoomPage() {
   const [roomCode, setRoomCode] = useState("");
@@ -70,6 +27,7 @@ export default function JoinRoomPage() {
       dice: [1, 1, 1, 1, 1],
       isCurrentTurn: false,
       rollsLeft: 3,
+      color: "#FCD34D",
     },
     {
       id: 2,
@@ -79,6 +37,7 @@ export default function JoinRoomPage() {
       dice: [1, 1, 1, 1, 1],
       isCurrentTurn: false,
       rollsLeft: 3,
+      color: "#3B82F6",
     },
   ]);
   const [currentPlayerId, setCurrentPlayerId] = useState<number | null>(null);
@@ -126,106 +85,81 @@ export default function JoinRoomPage() {
   const [chatInput, setChatInput] = useState("");
 
   useEffect(() => {
-    if (roomCode && hasJoined) {
-      const interval = setInterval(() => {
-        const rooms = getRooms();
-        const room = rooms.get(roomCode);
-        if (room) {
-          const isPlayerStillInRoom = room.players.some(
-            (p) => p.id === currentPlayerId,
-          );
+    webSocketService.connect();
+    
+    webSocketService.onRoomJoined((data) => {
+      setPlayers(data.room.players);
+      setTotalRounds(data.room.totalRounds);
+      setGameMode(data.room.gameMode);
+      setDiceType(data.room.diceType);
+      setGameStarted(data.room.gameStarted);
+      setCurrentRound(data.room.currentRound);
+      setCurrentPlayerIndex(data.room.currentPlayerIndex);
+      setRoundScores(data.room.roundScores);
+      setChatMessages(data.room.chatMessages || []);
+      webSocketService.setPlayerId(data.playerId);
+    });
 
-          if (!isPlayerStillInRoom && currentPlayerId) {
-            setHasBeenRemoved(true);
-            return;
-          }
+    webSocketService.onRoomUpdated((data) => {
+      setPlayers(data.room.players);
+      setTotalRounds(data.room.totalRounds);
+      setGameMode(data.room.gameMode);
+      setDiceType(data.room.diceType);
+      setGameStarted(data.room.gameStarted);
+      setCurrentRound(data.room.currentRound);
+      setCurrentPlayerIndex(data.room.currentPlayerIndex);
+      setRoundScores(data.room.roundScores);
+      setChatMessages(data.room.chatMessages || []);
+    });
 
-          if (room.players.length > players.length) {
-            const newPlayer = room.players.find(
-              (p) => !players.some((existing) => existing.id === p.id),
-            );
-            if (newPlayer) {
-              console.log("New player detected:", newPlayer.name);
-              showJoinNotification(newPlayer.name);
-
-              if (gameStarted) {
-                const joinMessage = {
-                  id: Date.now().toString(),
-                  playerName: "",
-                  message: `${newPlayer.name} has joined the game`,
-                  timestamp: Date.now(),
-                  isSystemMessage: true,
-                };
-                setChatMessages((prev) => [...prev, joinMessage]);
-
-                if (roomCode) {
-                  const rooms = getRooms();
-                  const room = rooms.get(roomCode);
-                  if (room) {
-                    const updatedRoom = {
-                      ...room,
-                      chatMessages: [...(room.chatMessages ?? []), joinMessage],
-                    };
-                    rooms.set(roomCode, updatedRoom);
-                    saveRooms(rooms);
-                  }
-                }
-              }
-            }
-          }
-
-          if (room.players.length < players.length) {
-            const leftPlayer = players.find(
-              (p) => !room.players.some((existing) => existing.id === p.id),
-            );
-            if (leftPlayer) {
-              console.log("Player left detected:", leftPlayer.name);
-              showLeaveNotification(leftPlayer.name);
-
-              if (gameStarted) {
-                const leaveMessage = {
-                  id: Date.now().toString(),
-                  playerName: "",
-                  message: `${leftPlayer.name} has left the game`,
-                  timestamp: Date.now(),
-                  isSystemMessage: true,
-                };
-                setChatMessages((prev) => [...prev, leaveMessage]);
-
-                if (roomCode) {
-                  const rooms = getRooms();
-                  const room = rooms.get(roomCode);
-                  if (room) {
-                    const updatedRoom = {
-                      ...room,
-                      chatMessages: [
-                        ...(room.chatMessages ?? []),
-                        leaveMessage,
-                      ],
-                    };
-                    rooms.set(roomCode, updatedRoom);
-                    saveRooms(rooms);
-                  }
-                }
-              }
-            }
-          }
-
-          setPlayers(room.players);
-          setTotalRounds(room.totalRounds);
-          setGameMode(room.gameMode);
-          setDiceType(room.diceType);
-          setGameStarted(room.gameStarted);
-          setCurrentRound(room.currentRound || 1);
-          setCurrentPlayerIndex(room.currentPlayerIndex || 0);
-          setRoundScores(room.roundScores || []);
-          setChatMessages(room.chatMessages ?? []);
+    webSocketService.onPlayerJoined((data) => {
+      const newPlayer = data.room.players.find(
+        (p) => !players.some((existing) => existing.id === p.id),
+      );
+      if (newPlayer) {
+        showJoinNotification(newPlayer.name);
+        if (gameStarted) {
+          const joinMessage = {
+            id: Date.now().toString(),
+            playerName: "",
+            message: `${newPlayer.name} has joined the game`,
+            timestamp: Date.now(),
+            isSystemMessage: true,
+          };
+          setChatMessages((prev) => [...prev, joinMessage]);
         }
-      }, 2000);
+      }
+      setPlayers(data.room.players);
+    });
 
-      return () => clearInterval(interval);
-    }
-  }, [roomCode, hasJoined, currentPlayerId, players]);
+    webSocketService.onPlayerLeft((data) => {
+      const leftPlayer = players.find(
+        (p) => !data.room.players.some((existing) => existing.id === p.id),
+      );
+      if (leftPlayer) {
+        showLeaveNotification(leftPlayer.name);
+        if (gameStarted) {
+          const leaveMessage = {
+            id: Date.now().toString(),
+            playerName: "",
+            message: `${leftPlayer.name} has left the game`,
+            timestamp: Date.now(),
+            isSystemMessage: true,
+          };
+          setChatMessages((prev) => [...prev, leaveMessage]);
+        }
+      }
+      setPlayers(data.room.players);
+    });
+
+    webSocketService.onChatMessage((data) => {
+      setChatMessages((prev) => [...prev, data.message]);
+    });
+
+    return () => {
+      webSocketService.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -250,69 +184,17 @@ export default function JoinRoomPage() {
 
     setIsJoining(true);
 
-    const rooms = getRooms();
-    const room = rooms.get(roomCode);
-    if (!room) {
-      setTimeout(() => {
-        setIsJoining(false);
-        alert("Room not found! Please check the room code.");
-      }, 1500);
-      return;
-    }
-
-    if (room.players.length >= 6) {
-      setTimeout(() => {
-        setIsJoining(false);
-        alert("Room is full! Please try another room.");
-      }, 1500);
-      return;
-    }
-
+    webSocketService.joinRoom(roomCode, playerName, false);
+    
     setTimeout(() => {
-      const newPlayerId = Date.now();
-      const newPlayer = {
-        id: newPlayerId,
-        name: playerName,
-        isHost: false,
-        score: 0,
-        dice: [1, 1, 1, 1, 1],
-        isCurrentTurn: false,
-        rollsLeft: 3,
-      };
-
-      const updatedPlayers = [...room.players, newPlayer];
-
-      rooms.set(roomCode, {
-        ...room,
-        players: updatedPlayers,
-      });
-      saveRooms(rooms);
-
-      setPlayers(updatedPlayers);
-      setCurrentPlayerId(newPlayerId);
       setIsJoining(false);
       setHasJoined(true);
       setHasBeenRemoved(false);
-
-      showJoinNotification(playerName);
     }, 1500);
   };
 
   const leaveRoom = () => {
-    if (roomCode && currentPlayerId) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        const updatedPlayers = room.players.filter(
-          (p) => p.id !== currentPlayerId,
-        );
-        rooms.set(roomCode, {
-          ...room,
-          players: updatedPlayers,
-        });
-        saveRooms(rooms);
-      }
-    }
+    webSocketService.leaveRoom();
     setHasJoined(false);
     setCurrentPlayerId(null);
     setGameStarted(false);
@@ -352,15 +234,18 @@ export default function JoinRoomPage() {
     );
 
     if (roomCode) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        rooms.set(roomCode, {
-          ...room,
-          players: updatedPlayers,
-        });
-        saveRooms(rooms);
-      }
+      const updatedRoom: RoomData = {
+        players: updatedPlayers,
+        totalRounds,
+        gameMode,
+        diceType,
+        gameStarted,
+        currentRound,
+        currentPlayerIndex,
+        roundScores,
+        chatMessages
+      };
+      webSocketService.updateRoom(updatedRoom);
     }
   };
 
@@ -371,15 +256,18 @@ export default function JoinRoomPage() {
     setPlayers(updatedPlayers);
 
     if (roomCode) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        rooms.set(roomCode, {
-          ...room,
-          players: updatedPlayers,
-        });
-        saveRooms(rooms);
-      }
+      const updatedRoom: RoomData = {
+        players: updatedPlayers,
+        totalRounds,
+        gameMode,
+        diceType,
+        gameStarted,
+        currentRound,
+        currentPlayerIndex,
+        roundScores,
+        chatMessages
+      };
+      webSocketService.updateRoom(updatedRoom);
     }
   };
 
@@ -390,15 +278,18 @@ export default function JoinRoomPage() {
     setPlayers(updatedPlayers);
 
     if (roomCode) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        rooms.set(roomCode, {
-          ...room,
-          players: updatedPlayers,
-        });
-        saveRooms(rooms);
-      }
+      const updatedRoom: RoomData = {
+        players: updatedPlayers,
+        totalRounds,
+        gameMode,
+        diceType,
+        gameStarted,
+        currentRound,
+        currentPlayerIndex,
+        roundScores,
+        chatMessages
+      };
+      webSocketService.updateRoom(updatedRoom);
     }
   };
 
@@ -416,16 +307,7 @@ export default function JoinRoomPage() {
     setChatInput("");
 
     if (roomCode) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        const updatedRoom = {
-          ...room,
-          chatMessages: [...(room.chatMessages ?? []), newMessage],
-        };
-        rooms.set(roomCode, updatedRoom);
-        saveRooms(rooms);
-      }
+      webSocketService.sendChatMessage(chatInput.trim(), playerName);
     }
   };
 
@@ -510,18 +392,18 @@ export default function JoinRoomPage() {
     }
 
     if (roomCode) {
-      const rooms = getRooms();
-      const room = rooms.get(roomCode);
-      if (room) {
-        rooms.set(roomCode, {
-          ...room,
-          players: updatedPlayers,
-          currentRound: nextRound,
-          currentPlayerIndex: nextPlayerIndex,
-          roundScores: newRoundScores,
-        });
-        saveRooms(rooms);
-      }
+      const updatedRoom: RoomData = {
+        players: updatedPlayers,
+        totalRounds,
+        gameMode,
+        diceType,
+        gameStarted,
+        currentRound: nextRound,
+        currentPlayerIndex: nextPlayerIndex,
+        roundScores: newRoundScores,
+        chatMessages
+      };
+      webSocketService.updateRoom(updatedRoom);
     }
 
     if (nextRound > totalRounds) {
