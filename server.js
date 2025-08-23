@@ -2,7 +2,7 @@
 
 const WebSocket = require("ws");
 
-const wss = new WebSocket.Server({ port: process.env.PORT || 3001 });
+const wss = new WebSocket.Server({ port: process.env.PORT || 34277 });
 
 const rooms = new Map();
 
@@ -161,7 +161,7 @@ function broadcastToRoom(roomCode, message) {
   });
 }
 
-console.log(`WebSocket server running on port ${process.env.PORT || 3001}`);
+console.log(`WebSocket server running on port ${process.env.PORT || 34277}`);
 console.log(
-  "To connect from your game, use: wss://anika4anne.hackclub.app:3001",
+  "To connect from your game, use: wss://anika4anne.hackclub.app:34277",
 );
