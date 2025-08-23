@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { webSocketService, type Player, type RoomData } from "../../services/websocket";
-
-
-
-
+import {
+  webSocketService,
+  type Player,
+  type RoomData,
+} from "../../services/websocket";
 
 export default function JoinRoomPage() {
   const [roomCode, setRoomCode] = useState("");
@@ -86,7 +86,7 @@ export default function JoinRoomPage() {
 
   useEffect(() => {
     webSocketService.connect();
-    
+
     webSocketService.onRoomJoined((data) => {
       setPlayers(data.room.players);
       setTotalRounds(data.room.totalRounds);
@@ -96,7 +96,7 @@ export default function JoinRoomPage() {
       setCurrentRound(data.room.currentRound);
       setCurrentPlayerIndex(data.room.currentPlayerIndex);
       setRoundScores(data.room.roundScores);
-      setChatMessages(data.room.chatMessages || []);
+      setChatMessages(data.room.chatMessages ?? []);
       webSocketService.setPlayerId(data.playerId);
     });
 
@@ -109,7 +109,7 @@ export default function JoinRoomPage() {
       setCurrentRound(data.room.currentRound);
       setCurrentPlayerIndex(data.room.currentPlayerIndex);
       setRoundScores(data.room.roundScores);
-      setChatMessages(data.room.chatMessages || []);
+      setChatMessages(data.room.chatMessages ?? []);
     });
 
     webSocketService.onPlayerJoined((data) => {
@@ -185,7 +185,7 @@ export default function JoinRoomPage() {
     setIsJoining(true);
 
     webSocketService.joinRoom(roomCode, playerName, false);
-    
+
     setTimeout(() => {
       setIsJoining(false);
       setHasJoined(true);
@@ -243,7 +243,7 @@ export default function JoinRoomPage() {
         currentRound,
         currentPlayerIndex,
         roundScores,
-        chatMessages
+        chatMessages,
       };
       webSocketService.updateRoom(updatedRoom);
     }
@@ -265,7 +265,7 @@ export default function JoinRoomPage() {
         currentRound,
         currentPlayerIndex,
         roundScores,
-        chatMessages
+        chatMessages,
       };
       webSocketService.updateRoom(updatedRoom);
     }
@@ -287,7 +287,7 @@ export default function JoinRoomPage() {
         currentRound,
         currentPlayerIndex,
         roundScores,
-        chatMessages
+        chatMessages,
       };
       webSocketService.updateRoom(updatedRoom);
     }
@@ -401,7 +401,7 @@ export default function JoinRoomPage() {
         currentRound: nextRound,
         currentPlayerIndex: nextPlayerIndex,
         roundScores: newRoundScores,
-        chatMessages
+        chatMessages,
       };
       webSocketService.updateRoom(updatedRoom);
     }

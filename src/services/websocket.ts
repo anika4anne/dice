@@ -1,4 +1,5 @@
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 
 export interface Player {
   id: number;
@@ -113,7 +114,7 @@ class WebSocketService {
     this.socket.on('player_left', callback);
   }
 
-  onChatMessage(callback: (data: { message: any }) => void) {
+  onChatMessage(callback: (data: { message: { id: string; playerName: string; message: string; timestamp: number; isSystemMessage?: boolean } }) => void) {
     if (!this.socket) return;
     this.socket.on('chat_message', callback);
   }
