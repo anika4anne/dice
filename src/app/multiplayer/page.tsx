@@ -171,7 +171,6 @@ export default function MultiplayerPage() {
       `${roundWinner.name} wins this round with ${roundWinner.score}!`,
     );
 
-    // Trigger confetti for round winner
     void confetti({
       particleCount: 50,
       spread: 60,
@@ -201,7 +200,7 @@ export default function MultiplayerPage() {
             isCurrentTurn: index === 0,
           })),
         );
-      }, 3000);  
+      }, 3000);
     }
   };
 
@@ -216,7 +215,6 @@ export default function MultiplayerPage() {
     setFinalResults(results);
     setShowLeaderboard(true);
 
- 
     void confetti({
       particleCount: 150,
       spread: 90,
@@ -427,7 +425,6 @@ export default function MultiplayerPage() {
           </div>
         ) : (
           <>
-     
             <div className="mb-6 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 p-6 text-center">
               <div className="mb-2 flex items-center justify-center space-x-2">
                 <span className="text-2xl">🎲</span>
@@ -444,7 +441,6 @@ export default function MultiplayerPage() {
               </p>
             </div>
 
-           
             <div className="mb-6 rounded-lg bg-gray-800 p-6 text-center">
               <h3 className="mb-2 text-xl text-white">
                 {players[currentPlayerIndex]?.name}&apos;s Turn
@@ -469,7 +465,6 @@ export default function MultiplayerPage() {
                 </button>
               )}
             </div>
-
 
             <div className="mb-6 flex justify-center gap-4">
               {players.map((player) => (
