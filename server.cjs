@@ -13,9 +13,9 @@ server4.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on IPv4 port ${PORT}`);
 });
 
-server6.listen(PORT, "::", () => {
-  console.log(`Server running on IPv6 port ${PORT}`);
-  console.log(`Server bound to [::]:${PORT} and 0.0.0.0:${PORT}`);
+server6.listen(PORT + 1, "::", () => {
+  console.log(`Server running on IPv6 port ${PORT + 1}`);
+  console.log(`Server bound to [::]:${PORT + 1} and 0.0.0.0:${PORT}`);
   console.log(
     "To connect from your game, use: wss://" +
       (process.env.HOST || "anika4anne.hackclub.app") +
