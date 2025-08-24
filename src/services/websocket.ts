@@ -57,11 +57,8 @@ class WebSocketService {
       return;
     }
 
-    const isLocal = window.location.hostname === "localhost";
-
-    this.socket = new WebSocket(
-      isLocal ? "ws://localhost:34277" : `wss://${window.location.host}/`,
-    );
+    // For testing, always connect to Nest server
+    this.socket = new WebSocket("wss://anika4anne.hackclub.app:34277");
 
     this.socket.onopen = () => {
       console.log("✅ Connected to WebSocket server");

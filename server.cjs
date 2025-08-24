@@ -6,10 +6,12 @@ const server = http.createServer();
 const wss = new WebSocketServer({ noServer: true });
 
 const PORT = process.env.PORT || 34277;
-server.listen(PORT, () => {
+server.listen(PORT, "::", () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Server bound to [::]:${PORT} (IPv6 + IPv4)`);
   console.log(
     "To connect from your game, use: wss://" +
-      (process.env.HOST || "localhost") +
+      (process.env.HOST || "anika4anne.hackclub.app") +
       ":" +
       PORT,
   );
@@ -24,6 +26,7 @@ server.on("upgrade", (request, socket, head) => {
 const rooms = new Map();
 
 wss.on("connection", (ws) => {
+  console.log("🔌 New WebSocket connection established");
   let currentRoom = null;
   let playerId = null;
 
@@ -179,6 +182,7 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
+    console.log("🔌 WebSocket connection closed");
     if (currentRoom && playerId) {
       const room = rooms.get(currentRoom);
       if (room) {
@@ -209,9 +213,8 @@ setInterval(() => {
         `  🏠 ${code}: ${room.players.length}/6 players, ${room.gameStarted ? "Game in progress" : "Waiting for players"}`,
       );
     });
-  } else {
-    console.log(`📊 No active rooms`);
   }
+  // Removed the "No active rooms" spam
 }, 30000);
 
 setInterval(() => {
