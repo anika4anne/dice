@@ -7,10 +7,11 @@ const wss = new WebSocketServer({ noServer: true });
 
 const PORT = process.env.PORT || 34277;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
   console.log(
     "To connect from your game, use: wss://" +
-      (process.env.HOST || "localhost"),
+      (process.env.HOST || "localhost") +
+      ":" +
+      PORT,
   );
 });
 
