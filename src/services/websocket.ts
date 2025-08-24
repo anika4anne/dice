@@ -60,7 +60,7 @@ class WebSocketService {
     const isLocal = window.location.hostname === "localhost";
 
     this.socket = new WebSocket(
-      isLocal ? "ws://localhost:3000" : `wss://${window.location.host}/`,
+      isLocal ? "ws://localhost:34277" : `wss://${window.location.host}/`,
     );
 
     this.socket.onopen = () => {
