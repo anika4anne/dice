@@ -18,8 +18,25 @@ wss.on("connection", (ws) => {
         case "join_room":
           const { roomCode, playerName, isHost } = data;
 
+          if (
+            !roomCode ||
+            typeof roomCode !== "string" ||
+            roomCode.length !== 6 ||
+            !/^[A-Z0-9]{6}$/.test(roomCode)
+          ) {
+            ws.send(
+              JSON.stringify({
+                type: "error",
+                message:
+                  "Invalid room code. Must be exactly 6 characters (letters and numbers only).",
+              }),
+            );
+            return;
+          }
+
           if (!rooms.has(roomCode)) {
             if (isHost) {
+              console.log(`🏠 Creating new room: ${roomCode}`);
               rooms.set(roomCode, {
                 players: [
                   {
@@ -42,9 +59,17 @@ wss.on("connection", (ws) => {
                 roundScores: [],
                 chatMessages: [],
               });
+              console.log(`✅ Room ${roomCode} created successfully`);
             } else {
+              // Non-host trying to join non-existent room
+              console.log(
+                `❌ Player ${playerName} tried to join non-existent room: ${roomCode}`,
+              );
               ws.send(
-                JSON.stringify({ type: "error", message: "Room not found" }),
+                JSON.stringify({
+                  type: "error",
+                  message: `Room "${roomCode}" does not exist. Please check the room code or ask the host to create the room first.`,
+                }),
               );
               return;
             }
@@ -76,12 +101,10 @@ wss.on("connection", (ws) => {
           currentRoom = roomCode;
           ws.currentRoom = roomCode;
 
-          // Send room_joined to the joining player first
           ws.send(
             JSON.stringify({ type: "room_joined", room: room, playerId }),
           );
 
-          // Now broadcast to all clients in the room (including the host)
           broadcastToRoom(roomCode, { type: "player_joined", room: room });
           break;
 
@@ -166,3 +189,32 @@ console.log(`WebSocket server running on port ${process.env.PORT || 34277}`);
 console.log(
   "To connect from your game, use: wss://anika4anne.hackclub.app:34277",
 );
+
+// Log active rooms every 30 seconds for debugging
+setInterval(() => {
+  if (rooms.size > 0) {
+    console.log(`📊 Active rooms: ${rooms.size}`);
+    rooms.forEach((room, code) => {
+      console.log(
+        `  🏠 ${code}: ${room.players.length}/6 players, ${room.gameStarted ? "Game in progress" : "Waiting for players"}`,
+      );
+    });
+  } else {
+    console.log(`📊 No active rooms`);
+  }
+}, 30000);
+
+// Clean up empty rooms every 5 minutes
+setInterval(() => {
+  let cleanedCount = 0;
+  for (const [code, room] of rooms.entries()) {
+    if (room.players.length === 0) {
+      rooms.delete(code);
+      cleanedCount++;
+      console.log(`🧹 Cleaned up empty room: ${code}`);
+    }
+  }
+  if (cleanedCount > 0) {
+    console.log(`🧹 Cleaned up ${cleanedCount} empty rooms`);
+  }
+}, 300000);

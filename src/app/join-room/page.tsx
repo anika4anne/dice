@@ -145,6 +145,11 @@ export default function JoinRoomPage() {
       setChatMessages((prev) => [...prev, data.message]);
     });
 
+    webSocketService.onError((data) => {
+      alert(`Error: ${data.message}`);
+      setIsJoining(false);
+    });
+
     return () => {
       webSocketService.disconnect();
     };
@@ -167,7 +172,11 @@ export default function JoinRoomPage() {
       return;
     }
     if (roomCode.length !== 6) {
-      alert("Room code must be 6 characters long!");
+      alert("Room code must be exactly 6 characters long!");
+      return;
+    }
+    if (!/^[A-Z0-9]{6}$/.test(roomCode)) {
+      alert("Room code must contain only letters and numbers (A-Z, 0-9)!");
       return;
     }
 
