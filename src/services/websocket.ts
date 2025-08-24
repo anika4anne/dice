@@ -57,7 +57,7 @@ class WebSocketService {
       return;
     }
 
-    this.socket = new WebSocket("wss://anika4anne.hackclub.app:34277");
+    this.socket = new WebSocket("ws://localhost:34277");
 
     this.socket.onopen = () => {
       console.log("✅ Connected to WebSocket server");

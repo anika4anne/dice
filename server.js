@@ -75,9 +75,13 @@ wss.on("connection", (ws) => {
 
           currentRoom = roomCode;
           ws.currentRoom = roomCode;
+
+          // Send room_joined to the joining player first
           ws.send(
             JSON.stringify({ type: "room_joined", room: room, playerId }),
           );
+
+          // Now broadcast to all clients in the room (including the host)
           broadcastToRoom(roomCode, { type: "player_joined", room: room });
           break;
 
@@ -152,10 +156,7 @@ wss.on("connection", (ws) => {
 
 function broadcastToRoom(roomCode, message) {
   wss.clients.forEach((client) => {
-    if (
-      client.currentRoom === roomCode &&
-      client.readyState === WebSocket.OPEN
-    ) {
+    if (client.currentRoom === roomCode && client.readyState === 1) {
       client.send(JSON.stringify(message));
     }
   });
