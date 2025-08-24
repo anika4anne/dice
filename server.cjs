@@ -1,8 +1,24 @@
 // @ts-nocheck
-
 const { WebSocketServer } = require("ws");
+const http = require("http");
 
-const wss = new WebSocketServer({ port: process.env.PORT || 34277 });
+const server = http.createServer();
+const wss = new WebSocketServer({ noServer: true });
+
+const PORT = process.env.PORT || 34277;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(
+    "To connect from your game, use: wss://" +
+      (process.env.HOST || "localhost"),
+  );
+});
+
+server.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
 
 const rooms = new Map();
 
@@ -61,7 +77,6 @@ wss.on("connection", (ws) => {
               });
               console.log(`✅ Room ${roomCode} created successfully`);
             } else {
-              // Non-host trying to join non-existent room
               console.log(
                 `❌ Player ${playerName} tried to join non-existent room: ${roomCode}`,
               );
@@ -185,12 +200,6 @@ function broadcastToRoom(roomCode, message) {
   });
 }
 
-console.log(`WebSocket server running on port ${process.env.PORT || 34277}`);
-console.log(
-  "To connect from your game, use: wss://anika4anne.hackclub.app:34277",
-);
-
-// Log active rooms every 30 seconds for debugging
 setInterval(() => {
   if (rooms.size > 0) {
     console.log(`📊 Active rooms: ${rooms.size}`);
@@ -204,7 +213,6 @@ setInterval(() => {
   }
 }, 30000);
 
-// Clean up empty rooms every 5 minutes
 setInterval(() => {
   let cleanedCount = 0;
   for (const [code, room] of rooms.entries()) {
