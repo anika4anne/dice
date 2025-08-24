@@ -70,6 +70,12 @@ class WebSocketService {
 
     this.socket.onerror = (error) => {
       console.error("🔴 WebSocket error:", error);
+      console.error("🔴 Error details:", {
+        type: error.type,
+        target: error.target,
+        readyState: (error.target as WebSocket)?.readyState,
+        url: (error.target as WebSocket)?.url,
+      });
     };
 
     this.socket.onmessage = (event) => {

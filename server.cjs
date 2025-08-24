@@ -2,13 +2,20 @@
 const { WebSocketServer } = require("ws");
 const http = require("http");
 
-const server = http.createServer();
 const wss = new WebSocketServer({ noServer: true });
 
 const PORT = process.env.PORT || 34277;
-server.listen(PORT, "::", () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Server bound to [::]:${PORT} (IPv6 + IPv4)`);
+// Create server that listens on both IPv4 and IPv6
+const server4 = http.createServer();
+const server6 = http.createServer();
+
+server4.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on IPv4 port ${PORT}`);
+});
+
+server6.listen(PORT, "::", () => {
+  console.log(`Server running on IPv6 port ${PORT}`);
+  console.log(`Server bound to [::]:${PORT} and 0.0.0.0:${PORT}`);
   console.log(
     "To connect from your game, use: wss://" +
       (process.env.HOST || "anika4anne.hackclub.app") +
@@ -17,11 +24,20 @@ server.listen(PORT, "::", () => {
   );
 });
 
-server.on("upgrade", (request, socket, head) => {
+// Handle upgrades on both servers
+server4.on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {
     wss.emit("connection", ws, request);
   });
 });
+
+server6.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
+
+// Old server.on("upgrade") removed - now using dual servers above
 
 const rooms = new Map();
 
