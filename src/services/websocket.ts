@@ -57,7 +57,11 @@ class WebSocketService {
       return;
     }
 
-    this.socket = new WebSocket("wss://anika4anne.hackclub.app:34277");
+    const isLocal = window.location.hostname === "localhost";
+
+    this.socket = new WebSocket(
+      isLocal ? "ws://localhost:3000" : `wss://${window.location.host}/`,
+    );
 
     this.socket.onopen = () => {
       console.log("✅ Connected to WebSocket server");
