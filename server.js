@@ -1,8 +1,8 @@
 // @ts-nocheck
 
-const WebSocket = require("ws");
+import { WebSocketServer } from "ws";
 
-const wss = new WebSocket.Server({ port: process.env.PORT || 34277 });
+const wss = new WebSocketServer({ port: process.env.PORT || 34277 });
 
 const rooms = new Map();
 

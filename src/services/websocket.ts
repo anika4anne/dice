@@ -1,6 +1,3 @@
-import { io } from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
-
 export interface Player {
   id: number;
   name: string;
@@ -31,106 +28,229 @@ export interface RoomData {
   }>;
 }
 
+type WebSocketMessage =
+  | { type: "room_joined"; room: RoomData; playerId: number }
+  | { type: "room_updated"; room: RoomData }
+  | { type: "player_joined"; room: RoomData }
+  | { type: "player_left"; room: RoomData }
+  | {
+      type: "chat_message";
+      message: {
+        id: string;
+        playerName: string;
+        message: string;
+        timestamp: number;
+        isSystemMessage?: boolean;
+      };
+    }
+  | { type: "error"; message: string };
+
 class WebSocketService {
-  private socket: Socket | null = null;
+  private socket: WebSocket | null = null;
   private roomCode: string | null = null;
   private playerId: number | null = null;
+  private eventListeners = new Map<string, Array<(data: unknown) => void>>();
 
   connect() {
-    this.socket = io('wss://anika4anne.hackclub.app:34277');
-    
-    this.socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      console.log("WebSocket already connected");
+      return;
+    }
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
+    this.socket = new WebSocket("wss://anika4anne.hackclub.app:34277");
 
-    this.socket.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
+    this.socket.onopen = () => {
+      console.log("✅ Connected to WebSocket server");
+    };
+
+    this.socket.onclose = () => {
+      console.log("❌ Disconnected from WebSocket server");
+    };
+
+    this.socket.onerror = (error) => {
+      console.error("🔴 WebSocket error:", error);
+    };
+
+    this.socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data as string) as WebSocketMessage;
+        this.handleMessage(data);
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
   }
 
-  joinRoom(roomCode: string, playerName: string, isHost: boolean, roomData?: Partial<RoomData>) {
-    if (!this.socket) return;
+  private handleMessage(data: WebSocketMessage) {
+    console.log("📨 Received WebSocket message:", data.type, data);
+    const { type, ...payload } = data;
+    const listeners = this.eventListeners.get(type as string) ?? [];
+    console.log(`🎯 Found ${listeners.length} listeners for event: ${type}`);
+    listeners.forEach((callback) => callback(payload));
+  }
 
+  private addEventListener(type: string, callback: (data: unknown) => void) {
+    if (!this.eventListeners.has(type)) {
+      this.eventListeners.set(type, []);
+    }
+    const listeners = this.eventListeners.get(type);
+    if (listeners) {
+      listeners.push(callback);
+    }
+  }
+
+  joinRoom(
+    roomCode: string,
+    playerName: string,
+    isHost: boolean,
+    roomData?: Partial<RoomData>,
+  ) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.error("🚫 Cannot join room: WebSocket not connected");
+      return;
+    }
+
+    console.log(
+      `🚪 Joining room: ${roomCode} as ${playerName} (host: ${isHost})`,
+    );
     this.roomCode = roomCode;
-    this.socket.emit('join_room', {
+    const message = {
+      type: "join_room",
       roomCode,
       playerName,
       isHost,
-      ...roomData
-    });
+      ...roomData,
+    };
+    console.log("📤 Sending join room message:", message);
+    this.socket.send(JSON.stringify(message));
   }
 
   updateRoom(roomData: RoomData) {
-    if (!this.socket || !this.roomCode) return;
+    if (
+      !this.socket ||
+      this.socket.readyState !== WebSocket.OPEN ||
+      !this.roomCode
+    )
+      return;
 
-    this.socket.emit('update_room', {
-      roomCode: this.roomCode,
-      roomData
-    });
+    this.socket.send(
+      JSON.stringify({
+        type: "update_room",
+        roomCode: this.roomCode,
+        roomData,
+      }),
+    );
   }
 
-  sendChatMessage(message: string, playerName: string, isSystemMessage = false) {
-    if (!this.socket || !this.roomCode) return;
+  sendChatMessage(
+    message: string,
+    playerName: string,
+    isSystemMessage = false,
+  ) {
+    if (
+      !this.socket ||
+      this.socket.readyState !== WebSocket.OPEN ||
+      !this.roomCode
+    )
+      return;
 
-    this.socket.emit('chat_message', {
-      roomCode: this.roomCode,
-      message: {
-        playerName,
-        message,
-        isSystemMessage
-      }
-    });
+    this.socket.send(
+      JSON.stringify({
+        type: "chat_message",
+        roomCode: this.roomCode,
+        message: {
+          playerName,
+          message,
+          isSystemMessage,
+        },
+      }),
+    );
   }
 
   leaveRoom() {
-    if (!this.socket || !this.roomCode) return;
+    if (
+      !this.socket ||
+      this.socket.readyState !== WebSocket.OPEN ||
+      !this.roomCode
+    )
+      return;
 
-    this.socket.emit('leave_room');
+    this.socket.send(
+      JSON.stringify({
+        type: "leave_room",
+      }),
+    );
     this.roomCode = null;
     this.playerId = null;
   }
 
   onRoomJoined(callback: (data: { room: RoomData; playerId: number }) => void) {
-    if (!this.socket) return;
-    this.socket.on('room_joined', callback);
+    this.addEventListener("room_joined", (data) =>
+      callback(data as { room: RoomData; playerId: number }),
+    );
   }
 
   onRoomUpdated(callback: (data: { room: RoomData }) => void) {
-    if (!this.socket) return;
-    this.socket.on('room_updated', callback);
+    this.addEventListener("room_updated", (data) =>
+      callback(data as { room: RoomData }),
+    );
   }
 
   onPlayerJoined(callback: (data: { room: RoomData }) => void) {
-    if (!this.socket) return;
-    this.socket.on('player_joined', callback);
+    this.addEventListener("player_joined", (data) =>
+      callback(data as { room: RoomData }),
+    );
   }
 
   onPlayerLeft(callback: (data: { room: RoomData }) => void) {
-    if (!this.socket) return;
-    this.socket.on('player_left', callback);
+    this.addEventListener("player_left", (data) =>
+      callback(data as { room: RoomData }),
+    );
   }
 
-  onChatMessage(callback: (data: { message: { id: string; playerName: string; message: string; timestamp: number; isSystemMessage?: boolean } }) => void) {
-    if (!this.socket) return;
-    this.socket.on('chat_message', callback);
+  onChatMessage(
+    callback: (data: {
+      message: {
+        id: string;
+        playerName: string;
+        message: string;
+        timestamp: number;
+        isSystemMessage?: boolean;
+      };
+    }) => void,
+  ) {
+    this.addEventListener("chat_message", (data) =>
+      callback(
+        data as {
+          message: {
+            id: string;
+            playerName: string;
+            message: string;
+            timestamp: number;
+            isSystemMessage?: boolean;
+          };
+        },
+      ),
+    );
   }
 
   onError(callback: (data: { message: string }) => void) {
-    if (!this.socket) return;
-    this.socket.on('error', callback);
+    this.addEventListener("error", (data) =>
+      callback(data as { message: string }),
+    );
   }
 
   disconnect() {
     if (this.socket) {
-      this.socket.disconnect();
+      this.socket.onclose = null;
+      this.socket.onmessage = null;
+      this.socket.onerror = null;
+      this.socket.close();
       this.socket = null;
     }
     this.roomCode = null;
     this.playerId = null;
+    this.eventListeners.clear();
   }
 
   setPlayerId(id: number) {

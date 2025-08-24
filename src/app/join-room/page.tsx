@@ -18,28 +18,7 @@ export default function JoinRoomPage() {
   const [totalRounds, setTotalRounds] = useState(5);
   const [gameMode, setGameMode] = useState("classic");
   const [diceType, setDiceType] = useState("6-sided");
-  const [players, setPlayers] = useState<Player[]>([
-    {
-      id: 1,
-      name: "Host",
-      isHost: true,
-      score: 0,
-      dice: [1, 1, 1, 1, 1],
-      isCurrentTurn: false,
-      rollsLeft: 3,
-      color: "#FCD34D",
-    },
-    {
-      id: 2,
-      name: "Player 2",
-      isHost: false,
-      score: 0,
-      dice: [1, 1, 1, 1, 1],
-      isCurrentTurn: false,
-      rollsLeft: 3,
-      color: "#3B82F6",
-    },
-  ]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerId, setCurrentPlayerId] = useState<number | null>(null);
   const [currentRound, setCurrentRound] = useState(1);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -113,43 +92,53 @@ export default function JoinRoomPage() {
     });
 
     webSocketService.onPlayerJoined((data) => {
-      const newPlayer = data.room.players.find(
-        (p) => !players.some((existing) => existing.id === p.id),
-      );
-      if (newPlayer) {
-        showJoinNotification(newPlayer.name);
-        if (gameStarted) {
-          const joinMessage = {
-            id: Date.now().toString(),
-            playerName: "",
-            message: `${newPlayer.name} has joined the game`,
-            timestamp: Date.now(),
-            isSystemMessage: true,
-          };
-          setChatMessages((prev) => [...prev, joinMessage]);
+      console.log("🎉 Player joined event received:", data);
+      setPlayers((currentPlayers) => {
+        const newPlayer = data.room.players.find(
+          (p) => !currentPlayers.some((existing) => existing.id === p.id),
+        );
+        if (newPlayer) {
+          console.log("👤 New player detected:", newPlayer.name);
+          showJoinNotification(newPlayer.name);
+
+          const currentGameStarted = gameStarted;
+          if (currentGameStarted) {
+            const joinMessage = {
+              id: Date.now().toString(),
+              playerName: "",
+              message: `${newPlayer.name} has joined the game`,
+              timestamp: Date.now(),
+              isSystemMessage: true,
+            };
+            setChatMessages((prev) => [...prev, joinMessage]);
+          }
         }
-      }
-      setPlayers(data.room.players);
+        return data.room.players;
+      });
     });
 
     webSocketService.onPlayerLeft((data) => {
-      const leftPlayer = players.find(
-        (p) => !data.room.players.some((existing) => existing.id === p.id),
-      );
-      if (leftPlayer) {
-        showLeaveNotification(leftPlayer.name);
-        if (gameStarted) {
-          const leaveMessage = {
-            id: Date.now().toString(),
-            playerName: "",
-            message: `${leftPlayer.name} has left the game`,
-            timestamp: Date.now(),
-            isSystemMessage: true,
-          };
-          setChatMessages((prev) => [...prev, leaveMessage]);
+      console.log("👋 Player left event received:", data);
+      setPlayers((currentPlayers) => {
+        const leftPlayer = currentPlayers.find(
+          (p) => !data.room.players.some((existing) => existing.id === p.id),
+        );
+        if (leftPlayer) {
+          console.log("🚪 Player left:", leftPlayer.name);
+          showLeaveNotification(leftPlayer.name);
+          if (gameStarted) {
+            const leaveMessage = {
+              id: Date.now().toString(),
+              playerName: "",
+              message: `${leftPlayer.name} has left the game`,
+              timestamp: Date.now(),
+              isSystemMessage: true,
+            };
+            setChatMessages((prev) => [...prev, leaveMessage]);
+          }
         }
-      }
-      setPlayers(data.room.players);
+        return data.room.players;
+      });
     });
 
     webSocketService.onChatMessage((data) => {
@@ -159,7 +148,7 @@ export default function JoinRoomPage() {
     return () => {
       webSocketService.disconnect();
     };
-  }, []);
+  }, [gameStarted]);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -591,7 +580,53 @@ export default function JoinRoomPage() {
               </button>
             </div>
 
-            <div className="fixed top-28 right-16 bottom-28 z-50 flex w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm">
+            <div className="mt-6 block xl:hidden">
+              <div className="mx-auto max-w-md rounded-lg border border-white/20 bg-gray-900/90 p-4 md:max-w-lg">
+                <h3 className="mb-4 text-lg font-bold text-white">
+                  Lobby Chat
+                </h3>
+                <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 max-h-32 space-y-2 overflow-y-auto">
+                  {chatMessages.map((msg) => (
+                    <div key={msg.id} className="flex items-start space-x-2">
+                      <span
+                        className={`text-sm font-semibold ${msg.isSystemMessage ? "text-red-400" : "text-blue-300"}`}
+                      >
+                        {msg.isSystemMessage ? "" : `${msg.playerName}:`}
+                      </span>
+                      <span
+                        className={`text-sm break-words ${
+                          msg.isSystemMessage
+                            ? msg.message.includes("joined")
+                              ? "text-green-300"
+                              : "text-red-300"
+                            : "text-white"
+                        }`}
+                      >
+                        {msg.message}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                    placeholder="Type a message..."
+                    className="flex-1 rounded border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400"
+                  />
+                  <button
+                    onClick={sendChatMessage}
+                    className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="fixed top-28 right-16 bottom-28 z-50 hidden w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm xl:flex">
               <h3 className="mb-4 text-lg font-bold text-white">Lobby Chat</h3>
               <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 flex-1 space-y-2 overflow-y-auto">
                 {chatMessages.map((msg) => (

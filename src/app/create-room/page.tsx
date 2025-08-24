@@ -85,43 +85,55 @@ export default function CreateRoomPage() {
     });
 
     webSocketService.onPlayerJoined((data) => {
-      const newPlayer = data.room.players.find(
-        (p) => !players.some((existing) => existing.id === p.id),
-      );
-      if (newPlayer) {
-        showJoinNotification(newPlayer.name);
-        if (gameStarted) {
-          const joinMessage = {
-            id: Date.now().toString(),
-            playerName: "System",
-            message: `${newPlayer.name} has joined the game`,
-            timestamp: Date.now(),
-            isSystemMessage: true,
-          };
-          setChatMessages((prev) => [...prev, joinMessage]);
+      console.log("🎉 Player joined event received:", data);
+      setPlayers((currentPlayers) => {
+        const newPlayer = data.room.players.find(
+          (p) => !currentPlayers.some((existing) => existing.id === p.id),
+        );
+        if (newPlayer) {
+          console.log("👤 New player detected:", newPlayer.name);
+          showJoinNotification(newPlayer.name);
+          // Use a ref or callback to avoid dependency issues
+          const currentGameStarted = gameStarted;
+          if (currentGameStarted) {
+            const joinMessage = {
+              id: Date.now().toString(),
+              playerName: "System",
+              message: `${newPlayer.name} has joined the game`,
+              timestamp: Date.now(),
+              isSystemMessage: true,
+            };
+            setChatMessages((prev) => [...prev, joinMessage]);
+          }
         }
-      }
-      setPlayers(data.room.players);
+        return data.room.players;
+      });
     });
 
     webSocketService.onPlayerLeft((data) => {
-      const leftPlayer = players.find(
-        (p) => !data.room.players.some((existing) => existing.id === p.id),
-      );
-      if (leftPlayer) {
-        showLeaveNotification(leftPlayer.name);
-        if (gameStarted) {
-          const leaveMessage = {
-            id: Date.now().toString(),
-            playerName: "",
-            message: `${leftPlayer.name} has left the game`,
-            timestamp: Date.now(),
-            isSystemMessage: true,
-          };
-          setChatMessages((prev) => [...prev, leaveMessage]);
+      console.log("👋 Player left event received:", data);
+      setPlayers((currentPlayers) => {
+        const leftPlayer = currentPlayers.find(
+          (p) => !data.room.players.some((existing) => existing.id === p.id),
+        );
+        if (leftPlayer) {
+          console.log("🚪 Player left:", leftPlayer.name);
+          showLeaveNotification(leftPlayer.name);
+          // Use a ref or callback to avoid dependency issues
+          const currentGameStarted = gameStarted;
+          if (currentGameStarted) {
+            const leaveMessage = {
+              id: Date.now().toString(),
+              playerName: "",
+              message: `${leftPlayer.name} has left the game`,
+              timestamp: Date.now(),
+              isSystemMessage: true,
+            };
+            setChatMessages((prev) => [...prev, leaveMessage]);
+          }
         }
-      }
-      setPlayers(data.room.players);
+        return data.room.players;
+      });
     });
 
     webSocketService.onChatMessage((data) => {
@@ -131,7 +143,7 @@ export default function CreateRoomPage() {
     return () => {
       webSocketService.disconnect();
     };
-  }, []);
+  }, [gameStarted]);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -690,14 +702,65 @@ export default function CreateRoomPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
                     </div>
                   </button>
                 </div>
 
-                <div className="fixed top-28 right-16 bottom-28 z-50 flex w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm">
+                <div className="mt-6 block xl:hidden">
+                  <div className="mx-auto max-w-md rounded-lg border border-white/20 bg-gray-900/90 p-4 md:max-w-lg">
+                    <h3 className="mb-4 text-lg font-bold text-white">
+                      Lobby Chat
+                    </h3>
+                    <div className="chat-messages scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent mb-4 max-h-32 space-y-2 overflow-y-auto">
+                      {chatMessages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className="flex items-start space-x-2"
+                        >
+                          <span
+                            className={`text-sm font-semibold ${msg.isSystemMessage ? "text-red-400" : "text-blue-300"}`}
+                          >
+                            {msg.isSystemMessage ? "" : `${msg.playerName}:`}
+                          </span>
+                          <span
+                            className={`text-sm break-words ${
+                              msg.isSystemMessage
+                                ? msg.message.includes("joined")
+                                  ? "text-green-300"
+                                  : "text-red-300"
+                                : "text-white"
+                            }`}
+                          >
+                            {msg.message}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && sendChatMessage()
+                        }
+                        placeholder="Type a message..."
+                        className="flex-1 rounded border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400"
+                      />
+                      <button
+                        onClick={sendChatMessage}
+                        className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="fixed top-28 right-16 bottom-28 z-50 hidden w-80 flex-col rounded-lg border border-white/20 bg-gray-900/90 p-4 backdrop-blur-sm xl:flex">
                   <h3 className="mb-4 text-lg font-bold text-white">
                     Lobby Chat
                   </h3>
