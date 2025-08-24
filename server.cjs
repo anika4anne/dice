@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { WebSocketServer } from "ws";
+const { WebSocketServer } = require("ws");
 
 const wss = new WebSocketServer({ port: process.env.PORT || 34277 });
 

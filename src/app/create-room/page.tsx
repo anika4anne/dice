@@ -56,6 +56,29 @@ export default function CreateRoomPage() {
   >([]);
   const [chatInput, setChatInput] = useState("");
 
+  const availableIcons = [
+    "👤",
+    "😊",
+    "😎",
+    "🤖",
+    "👾",
+    "🦸",
+    "🧙",
+    "🐙",
+    "🦄",
+    "🐉",
+    "⚡",
+    "🔥",
+    "💎",
+    "🎯",
+    "🚀",
+    "🌟",
+    "🎮",
+    "🎲",
+    "🏆",
+    "💪",
+  ];
+
   useEffect(() => {
     webSocketService.connect();
 
@@ -378,6 +401,28 @@ export default function CreateRoomPage() {
     }
   };
 
+  const changePlayerIcon = (playerId: number, newIcon: string) => {
+    const updatedPlayers = players.map((player) =>
+      player.id === playerId ? { ...player, icon: newIcon } : player,
+    );
+    setPlayers(updatedPlayers);
+
+    if (roomCode) {
+      const updatedRoom: RoomData = {
+        players: updatedPlayers,
+        totalRounds,
+        gameMode,
+        diceType,
+        gameStarted,
+        currentRound,
+        currentPlayerIndex,
+        roundScores,
+        chatMessages,
+      };
+      webSocketService.updateRoom(updatedRoom);
+    }
+  };
+
   const showJoinNotification = (playerName: string) => {
     console.log("Showing join notification for:", playerName);
     setJoinNotification({ name: playerName, visible: true });
@@ -665,11 +710,22 @@ export default function CreateRoomPage() {
                                 : "Only players can change their own names"
                             }
                           />
-                          {player.isHost ? (
-                            <span className="ml-2 text-xs text-gray-400">
-                              Host can&apos;t change icon
-                            </span>
-                          ) : null}
+                          {!player.isHost && (
+                            <select
+                              value={player.icon ?? "👤"}
+                              onChange={(e) =>
+                                changePlayerIcon(player.id, e.target.value)
+                              }
+                              className="ml-2 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-xs text-white"
+                              title="Change player icon"
+                            >
+                              {availableIcons.map((icon) => (
+                                <option key={icon} value={icon}>
+                                  {icon}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </div>
                         {!player.isHost && (
                           <button
