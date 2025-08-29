@@ -34,11 +34,12 @@ export default function SinglePlayerPage() {
   useEffect(() => {
     if (isRolling) {
       const interval = setInterval(() => {
+        const maxValue = getDiceMax();
         setPlayerDice((prev) =>
-          prev.map(() => Math.floor(Math.random() * 6) + 1),
+          prev.map(() => Math.floor(Math.random() * maxValue) + 1),
         );
         setRobotDice((prev) =>
-          prev.map(() => Math.floor(Math.random() * 6) + 1),
+          prev.map(() => Math.floor(Math.random() * maxValue) + 1),
         );
       }, 100);
 
@@ -100,7 +101,7 @@ export default function SinglePlayerPage() {
     const max = getDiceMax();
 
     switch (gameMode) {
-      case "sum":
+      case "classic":
         return dice.reduce((sum, value) => sum + value, 0);
       case "multiply":
         return dice.reduce((product, value) => product * value, 1);
@@ -241,7 +242,7 @@ export default function SinglePlayerPage() {
   };
 
   const getScoreDescription = (score: number) => {
-    if (gameMode === "sum") return `sum: ${score}`;
+    if (gameMode === "classic") return `sum: ${score}`;
     if (gameMode === "multiply") return `product: ${score}`;
     if (gameMode === "highest") return `highest: ${score}`;
     if (gameMode === "lowest") return `lowest: ${score}`;

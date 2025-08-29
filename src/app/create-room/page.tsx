@@ -224,7 +224,7 @@ export default function CreateRoomPage() {
     const max = getDiceMax();
 
     switch (gameMode) {
-      case "sum":
+      case "classic":
         return dice.reduce((sum, value) => sum + value, 0);
       case "multiply":
         return dice.reduce((product, value) => product * value, 1);
