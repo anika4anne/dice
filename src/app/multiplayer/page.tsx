@@ -72,9 +72,9 @@ export default function MultiplayerPage() {
       case "lowest":
         return Math.min(...dice);
       case "pairs":
-        const counts: { [key: number]: number } = {};
+        const counts: Record<number, number> = {};
         dice.forEach((die) => {
-          counts[die] = (counts[die] || 0) + 1;
+          counts[die] = (counts[die] ?? 0) + 1;
         });
         let pairScore = 0;
         Object.values(counts).forEach((count) => {
@@ -93,10 +93,10 @@ export default function MultiplayerPage() {
     if (scores.length === 0) return 0;
 
     let winnerIndex = 0;
-    let bestScore = scores[0] || 0;
+    let bestScore = scores[0] ?? 0;
 
     for (let i = 1; i < scores.length; i++) {
-      const currentScore = scores[i] || 0;
+      const currentScore = scores[i] ?? 0;
       if (currentScore > bestScore) {
         bestScore = currentScore;
         winnerIndex = i;
@@ -173,9 +173,9 @@ export default function MultiplayerPage() {
       const maxWins = Math.max(...newPlayerWins);
       const results = players.map((name, index) => ({
         name,
-        wins: newPlayerWins[index] || 0,
-        score: newPlayerScores[index] || 0,
-        isWinner: (newPlayerWins[index] || 0) === maxWins,
+        wins: newPlayerWins[index] ?? 0,
+        score: newPlayerScores[index] ?? 0,
+        isWinner: (newPlayerWins[index] ?? 0) === maxWins,
       }));
       setFinalResults(results);
       setShowLeaderboard(true);
@@ -359,7 +359,7 @@ export default function MultiplayerPage() {
                   >
                     <span className="text-white">{player}</span>
                     <span className="font-semibold text-green-300">
-                      {roundScores[index] || 0} points
+                      {roundScores[index] ?? 0} points
                     </span>
                   </div>
                 ))}
@@ -388,7 +388,7 @@ export default function MultiplayerPage() {
                 Round {currentRound} Complete!
               </p>
               <p className="mb-4 text-lg text-white">
-                Winner: {players[determineRoundWinner()] || "Unknown"} with{" "}
+                Winner: {players[determineRoundWinner()] ?? "Unknown"} with{" "}
                 {Math.max(
                   ...roundScores.filter((score) => score !== undefined),
                 )}{" "}

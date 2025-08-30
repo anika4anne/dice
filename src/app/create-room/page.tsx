@@ -9,9 +9,7 @@ type GameMode = {
   rules: string[];
 };
 
-type GameModes = {
-  [key: string]: GameMode;
-};
+type GameModes = Record<string, GameMode>;
 
 export default function HowToPlayPage() {
   const [activeTab, setActiveTab] = useState<string>("classic");
@@ -127,7 +125,6 @@ export default function HowToPlayPage() {
           </div>
         </div>
 
-        {/* Basic Rules */}
         <div className="mb-8 rounded-lg bg-blue-900 p-6 text-white">
           <button
             onClick={() => setShowBasics(!showBasics)}
@@ -198,7 +195,6 @@ export default function HowToPlayPage() {
             </ul>
           </div>
 
-          {/* Example */}
           <div className="rounded bg-green-800 p-4">
             <h4 className="mb-2 font-semibold text-green-100">Example:</h4>
             <p className="text-sm text-green-200">
