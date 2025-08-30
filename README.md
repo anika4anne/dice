@@ -32,7 +32,8 @@ Some things to know: I've got the background image for free from google (yes i'v
 Images:
 This is the homepage
 
-<img width="1726" height="1057" alt="image" src="https://github.com/user-attachments/assets/9b404dbb-079b-445d-8787-8b9e23c8e127" />
+<img width="1722" height="1036" alt="image" src="https://github.com/user-attachments/assets/0da1beaf-756c-4fce-81db-d176c8399abd" />
+
 
 Play Solo
 You can change the game settings, there are multiple ways to play the game (<img width="242" height="150" alt="image" src="https://github.com/user-attachments/assets/0ccaa5d2-2e13-4070-afdb-05d32a526662" />
@@ -49,16 +50,11 @@ You can add up to 6 people, and they will all play on the same laptop
 
 <img width="807" height="563" alt="image" src="https://github.com/user-attachments/assets/9193a099-2fd9-4c49-8a03-42f9a139d9fd" />
 
-Create Private Room:
-You can create a separate room for your friends where they play on their own devices
-<img width="799" height="927" alt="image" src="https://github.com/user-attachments/assets/4ac81df6-4706-461b-a234-df7b8e3efc86" />
+How to play feature:
+<img width="1723" height="1035" alt="image" src="https://github.com/user-attachments/assets/991ff6d5-03c5-4c58-a4d6-db3f5dd70865" />
+You can click through the different filters to see how eahc game mode works, and if you click on the the basics, it expands and shows the basic stuff to play the game
 
-<img width="1681" height="999" alt="image" src="https://github.com/user-attachments/assets/3c20bc23-f2a2-476e-8a93-9ad089654f74" />
+<img width="1665" height="1027" alt="image" src="https://github.com/user-attachments/assets/5fee638f-0633-4173-b311-fc27c62bdbef" />
 
-I've also added a confetti thing, so when a new player joins it shows up
+and on each filter you can see the example i put on how to game will work at the bottom
 
-Join private room:
-
-<img width="822" height="996" alt="image" src="https://github.com/user-attachments/assets/5823b320-f9f6-41ba-bc45-68a064fa60db" />
-
-<img width="1681" height="999" alt="image" src="https://github.com/user-attachments/assets/d8bc5e30-f1b6-446e-ab71-40cc00495d02" />
