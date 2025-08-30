@@ -100,7 +100,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid w-full max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
+          <div className="flex justify-center">
             <Link href="/create-room" className="rounded-xl bg-blue-900 p-6">
               <div>
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-black">
@@ -114,60 +114,18 @@ export default function HomePage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
                 <h3 className="mb-3 text-2xl font-bold text-white">
-                  create room
+                  how to play
                 </h3>
                 <p className="mb-4 text-gray-300">
-                  make a private room and invite friends
+                  learn the rules and different game modes
                 </p>
                 <div className="flex items-center text-white">
-                  <span className="font-semibold">create room</span>
-                  <svg
-                    className="ml-2 h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/join-room" className="rounded-xl bg-blue-900 p-6">
-              <div>
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-black">
-                  <svg
-                    className="h-8 w-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-3 text-2xl font-bold text-white">
-                  join room
-                </h3>
-                <p className="mb-4 text-gray-300">
-                  join a friends room with their code
-                </p>
-                <div className="flex items-center text-white">
-                  <span className="font-semibold">join room</span>
+                  <span className="font-semibold">learn more</span>
                   <svg
                     className="ml-2 h-5 w-5"
                     fill="none"
