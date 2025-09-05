@@ -1,23 +1,5 @@
 # Dice Game
 
-[![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
-
-1. What is my project?
-
-- My project is a dice game, and basically you roll a dice and (there's different game modes, so rn i'll just explain one of them), if the number you rolled adds up to be more than the number rolled by your opponent you win
-
-2. Why i made this project?
-
-- I made this project because it was it was a pretty cool idea,and i really wanted to start getting into making private rooms and stuff like that so i can soon make real 3d games
-
-3. How i made this project?
-
-- Okay so my project is built with next.js, and used pnpm create t3-app, which sets up all the essential files, and from there on i can create folders and page.tsx to route it to different pages of my website
-
-4. What i struggled with and what I learnt
-
-- I struggled with making private rooms and having live syncing work because i would originally have to reload for new players to join a private room, and i fixed it by using local storage system rather than using websockets (using websockets i tried it but it got complicated and i gave up)
-
 You can clone my website with the following commands (if you want to)
 
 git clone [https://github.com/your-username/your-repo](https://github.com/anika4anne/dice.git)]
